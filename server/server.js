@@ -8,11 +8,16 @@ app.use(cors());
 
 app.use(express.json());
 
-const db = require("./app/models");
-db.sequelize
-  .authenticate()
-  .then(() => console.log("db connection ok"))
-  .catch((err) => console.log("db connection error", err));
+const { sequelize } = require("./app/models");
+
+sequelize
+  .sync()
+  .then(() => {
+    console.log("Database models synchronization successful.");
+  })
+  .catch((err) => {
+    console.error("Database models synchronization failed:", err);
+  });
 
 app.use("/", (req, res) => {
   res.json({ hello: "hi" });

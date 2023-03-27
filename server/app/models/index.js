@@ -1,6 +1,6 @@
 const config = require("../config/db.config");
 
-const { Sequelize } = require("sequelize");
+const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize(
   config.DB_NAME,
@@ -12,10 +12,13 @@ const sequelize = new Sequelize(
   }
 );
 
-const db = {};
-db.Sequelize = Sequelize;
-db.sequelize = sequelize;
+sequelize
+  .authenticate()
+  .then(() =>
+    console.log("Connection to database has been established successfully.")
+  )
+  .catch((err) => console.log("Unable to connect to the database:", err));
 
-db.user = require("./user.model")(sequelize, Sequelize);
+const User = require("./user.model")(sequelize, Sequelize);
 
-module.exports = db;
+module.exports = { sequelize, User };
