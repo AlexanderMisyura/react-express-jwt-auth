@@ -1,8 +1,8 @@
-const db = require("../models");
+const { User } = require("../models");
 
 const checkDuplicateCredentials = async (req, res, next) => {
   try {
-    const userByUsername = await db.user.findOne({
+    const userByUsername = await User.findOne({
       where: {
         username: req.body.username,
       },
@@ -14,7 +14,7 @@ const checkDuplicateCredentials = async (req, res, next) => {
       return;
     }
 
-    const userByEmail = await db.user.findOne({
+    const userByEmail = await User.findOne({
       where: {
         email: req.body.email,
       },
