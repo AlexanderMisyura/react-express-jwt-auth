@@ -6,7 +6,7 @@ const app = express();
 
 app.use(cors());
 
-app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const { sequelize } = require("./app/models");
 
@@ -19,9 +19,8 @@ sequelize
     console.error("Database models synchronization failed:", err);
   });
 
-app.use("/", (req, res) => {
-  res.json({ hello: "hi" });
-});
+app.use("/api/auth", require("./app/routes/auth.route"));
+app.use("/api/check", require("./app/routes/access.route"));
 
 const PORT = process.env.PORT || 8000;
 
