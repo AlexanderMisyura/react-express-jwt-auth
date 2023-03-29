@@ -30,19 +30,18 @@ module.exports = (sequelize, Sequelize) => {
           user.password = await bcryptjs.hash(user.password, salt);
         },
       },
-      instanceMethods: {
-        // method to compare passwords
-        comparePassword: async function (password, callback) {
-          try {
-            const isMatch = await bcryptjs.compare(password, this.password);
-            callback(null, isMatch);
-          } catch (err) {
-            callback(err);
-          }
-        },
-      },
     }
   );
+
+  // method to compare passwords
+  User.prototype.comparePassword = async function (password, callback) {
+    try {
+      const isMatch = await bcryptjs.compare(password, this.password);
+      callback(null, isMatch);
+    } catch (err) {
+      callback(err);
+    }
+  };
 
   return User;
 };
