@@ -22,20 +22,27 @@ exports.signup = async (req, res) => {
     });
 
     // Generate a token for the user using the secret key and the expiration time
-    const token = jwt.sign({ userId: user.id }, authConfig.secret, {
-      expiresIn,
-    });
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        name: user.username,
+        email: user.email,
+        scope: scope,
+        iss: authConfig.iss,
+      },
+      authConfig.secret,
+      {
+        expiresIn,
+      }
+    );
+    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
 
     // Send a success response with the user and token data
     res.status(200).json({
-      message: "Registration success",
-      user_id: user.id,
-      username: user.username,
-      email: user.email,
       access_token: token,
       token_type: "Bearer",
       expires_in: expiresIn,
-      scope: scope,
+      expires_at: expiresAt,
     });
   } catch (error) {
     // Send an error response with the error message
@@ -72,19 +79,27 @@ exports.login = async (req, res) => {
     });
 
     // Generate a token for the user using the secret key and the expiration time
-    const token = jwt.sign({ userId: user.id }, authConfig.secret, {
-      expiresIn,
-    });
+    const token = jwt.sign(
+      {
+        sub: user.id,
+        name: user.username,
+        email: user.email,
+        scope: scope,
+        iss: authConfig.iss,
+      },
+      authConfig.secret,
+      {
+        expiresIn,
+      }
+    );
+    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
 
     // Send a success response with the user and token data
     res.status(200).json({
-      user_id: user.id,
-      username: user.username,
-      email: user.email,
       access_token: token,
       token_type: "Bearer",
       expires_in: expiresIn,
-      scope: scope,
+      expires_at: expiresAt,
     });
   } catch (error) {
     // Send an error response with the error message
