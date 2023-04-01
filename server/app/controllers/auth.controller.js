@@ -1,15 +1,14 @@
-// Import the User model and the jwt library
+// Import the User model
 const { User } = require("../models");
-const jwt = require("jsonwebtoken");
+
+// Import functions for token generation
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../libs/token");
 
 // Import the auth configuration file
 const authConfig = require("../config/auth.config");
-
-// Set the expiration time for the token in seconds
-const expiresIn = 86400;
-
-// Set the scope of the token
-const scope = "browse cart order profile review";
 
 // Define a function to handle user signup requests
 exports.signup = async (req, res) => {
@@ -21,32 +20,28 @@ exports.signup = async (req, res) => {
       password: req.body.password,
     });
 
-    // Generate a token for the user using the secret key and the expiration time
-    const token = jwt.sign(
-      {
-        sub: user.id,
-        name: user.username,
-        email: user.email,
-        scope: scope,
-        iss: authConfig.iss,
-      },
-      authConfig.secret,
-      {
-        expiresIn,
-      }
-    );
-    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+    // Generate tokens for the user
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    const accessExpiresAt =
+      Math.floor(Date.now() / 1000) + authConfig.jwtAccessExpiresIn;
+    const refreshExpiresAt =
+      Math.floor(Date.now() / 1000) + authConfig.jwtRefreshExpiresIn;
 
     // Send a success response with the user and token data
     res.status(200).json({
-      access_token: token,
+      access_token: accessToken,
       token_type: "Bearer",
-      expires_in: expiresIn,
-      expires_at: expiresAt,
+      access_expires_in: authConfig.jwtAccessExpiresIn,
+      access_expires_at: accessExpiresAt,
+      refresh_token: refreshToken,
+      refresh_expires_in: authConfig.jwtRefreshExpiresIn,
+      refresh_expires_at: refreshExpiresAt,
     });
-  } catch (error) {
+  } catch (err) {
     // Send an error response with the error message
-    res.status(500).json({ message: `registration error: ${error}` });
+    res.status(500).json({ message: `registration error: ${err}` });
   }
 };
 
@@ -78,31 +73,29 @@ exports.login = async (req, res) => {
       }
     });
 
-    // Generate a token for the user using the secret key and the expiration time
-    const token = jwt.sign(
-      {
-        sub: user.id,
-        name: user.username,
-        email: user.email,
-        scope: scope,
-        iss: authConfig.iss,
-      },
-      authConfig.secret,
-      {
-        expiresIn,
-      }
-    );
-    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+    // Generate tokens for the user using service functions
+    const accessToken = generateAccessToken(user);
+
+    user.expiredRefreshToken = req.headers["Authorization"]?.split(" ")?.[1];
+    const refreshToken = generateRefreshToken(user);
+
+    const accessExpiresAt =
+      Math.floor(Date.now() / 1000) + authConfig.jwtAccessExpiresIn;
+    const refreshExpiresAt =
+      Math.floor(Date.now() / 1000) + authConfig.jwtRefreshExpiresIn;
 
     // Send a success response with the user and token data
     res.status(200).json({
-      access_token: token,
+      access_token: accessToken,
       token_type: "Bearer",
-      expires_in: expiresIn,
-      expires_at: expiresAt,
+      access_expires_in: authConfig.jwtAccessExpiresIn,
+      access_expires_at: accessExpiresAt,
+      refresh_token: refreshToken,
+      refresh_expires_in: authConfig.jwtRefreshExpiresIn,
+      refresh_expires_at: refreshExpiresAt,
     });
-  } catch (error) {
+  } catch (err) {
     // Send an error response with the error message
-    res.status(500).json({ message: `login error: ${error}` });
+    res.status(500).json({ message: `login error: ${err}` });
   }
 };
