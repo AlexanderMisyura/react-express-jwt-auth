@@ -5,7 +5,7 @@ const { User } = require("../models");
 const {
   generateAccessToken,
   generateRefreshToken,
-} = require("../libs/token");
+} = require("../services/token.service");
 
 // Import the auth configuration file
 const authConfig = require("../config/auth.config");
