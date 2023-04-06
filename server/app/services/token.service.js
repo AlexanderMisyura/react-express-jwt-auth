@@ -36,7 +36,10 @@ async function generateRefreshToken(user) {
       });
     }
 
-    const dbToken = await RefreshToken.create({ user_id: user.id });
+    const dbToken = await RefreshToken.create({
+      user_id: user.id,
+      expires_at: Date.now() + authConfig.jwtRefreshExpiresIn * 1000,
+    });
 
     const refreshToken = jwt.sign(
       {
