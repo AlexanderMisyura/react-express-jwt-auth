@@ -22,7 +22,7 @@ exports.signup = async (req, res) => {
 
     // Generate tokens for the user
     const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    const refreshToken = await generateRefreshToken(user);
 
     const accessExpiresAt =
       Math.floor(Date.now() / 1000) + authConfig.jwtAccessExpiresIn;
@@ -76,8 +76,8 @@ exports.login = async (req, res) => {
     // Generate tokens for the user using service functions
     const accessToken = generateAccessToken(user);
 
-    user.expiredRefreshToken = req.headers["Authorization"]?.split(" ")?.[1];
-    const refreshToken = generateRefreshToken(user);
+    user.expiredRefreshToken = req.headers.authorization.split(" ")[1];
+    const refreshToken = await generateRefreshToken(user);
 
     const accessExpiresAt =
       Math.floor(Date.now() / 1000) + authConfig.jwtAccessExpiresIn;
