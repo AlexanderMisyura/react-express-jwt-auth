@@ -2,7 +2,7 @@ const bcryptjs = require("bcryptjs");
 
 module.exports = (sequelize, Sequelize) => {
   const User = sequelize.define(
-    "user",
+    "User",
     {
       username: {
         type: Sequelize.STRING,
@@ -23,6 +23,7 @@ module.exports = (sequelize, Sequelize) => {
       },
     },
     {
+      tableName: "users",
       hooks: {
         // hook to hash the password before saving it to the database
         beforeCreate: async (user) => {
