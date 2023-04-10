@@ -24,18 +24,23 @@ exports.signup = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
 
-    const accessExpiresAt =
-      Math.floor(Date.now() / 1000) + authConfig.jwtAccessExpiresIn;
-    const refreshExpiresAt =
-      Math.floor(Date.now() / 1000) + authConfig.jwtRefreshExpiresIn;
+    const accessExpiresAt = new Date(
+      Date.now() + authConfig.jwtAccessExpiresIn * 1000
+    );
+    const refreshExpiresAt = new Date(
+      Date.now() + authConfig.jwtRefreshExpiresIn * 1000
+    );
 
     // Send a success response with the user and token data
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      expires: refreshExpiresAt,
+    });
     res.status(200).json({
       access_token: accessToken,
       token_type: "Bearer",
       access_expires_in: authConfig.jwtAccessExpiresIn,
       access_expires_at: accessExpiresAt,
-      refresh_token: refreshToken,
       refresh_expires_in: authConfig.jwtRefreshExpiresIn,
       refresh_expires_at: refreshExpiresAt,
     });
@@ -73,24 +78,31 @@ exports.login = async (req, res) => {
       }
     });
 
+    // Get an old refresh token if any
+    const oldRefreshToken = req.cookies.refresh_token;
+
     // Generate tokens for the user using service functions
     const accessToken = generateAccessToken(user);
 
-    user.expiredRefreshToken = req.headers.authorization.split(" ")[1];
-    const refreshToken = await generateRefreshToken(user);
+    const refreshToken = await generateRefreshToken(user, oldRefreshToken);
 
-    const accessExpiresAt =
-      Math.floor(Date.now() / 1000) + authConfig.jwtAccessExpiresIn;
-    const refreshExpiresAt =
-      Math.floor(Date.now() / 1000) + authConfig.jwtRefreshExpiresIn;
+    const accessExpiresAt = new Date(
+      Date.now() + authConfig.jwtAccessExpiresIn * 1000
+    );
+    const refreshExpiresAt = new Date(
+      Date.now() + authConfig.jwtRefreshExpiresIn * 1000
+    );
 
     // Send a success response with the user and token data
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      expires: refreshExpiresAt,
+    });
     res.status(200).json({
       access_token: accessToken,
       token_type: "Bearer",
       access_expires_in: authConfig.jwtAccessExpiresIn,
       access_expires_at: accessExpiresAt,
-      refresh_token: refreshToken,
       refresh_expires_in: authConfig.jwtRefreshExpiresIn,
       refresh_expires_at: refreshExpiresAt,
     });

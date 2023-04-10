@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 require("dotenv").config({ path: "./app/config/.env" });
 
 const app = express();
@@ -7,6 +8,8 @@ const app = express();
 app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 
 const { sequelize } = require("./app/models");
 
