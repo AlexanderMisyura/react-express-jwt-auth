@@ -20,7 +20,7 @@ sequelize
   });
 
 app.use("/api/auth", require("./app/routes/auth.route"));
-app.use("/api/check", require("./app/routes/access.route"));
+app.use("/api/verify", require("./app/routes/access.route"));
 
 const PORT = process.env.PORT || 8000;
 
