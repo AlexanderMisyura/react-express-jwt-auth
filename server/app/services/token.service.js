@@ -19,18 +19,19 @@ function generateAccessToken(user) {
 }
 
 // Generate refresh token and save it to DB
-async function generateRefreshToken(user) {
+async function generateRefreshToken(user, expiredRefreshToken) {
   // Delete expired refresh token from DB if any
   try {
-    if (user.expiredRefreshToken) {
+    if (expiredRefreshToken) {
       const decoded = jwt.verify(
-        user.expiredRefreshToken,
+        expiredRefreshToken,
         authConfig.JWT_REFRESH_SECRET,
         { ignoreExpiration: true }
       );
 
       await RefreshToken.destroy({
         where: {
+          user_id: decoded.sub,
           jti: decoded.jti,
         },
       });
@@ -44,8 +45,6 @@ async function generateRefreshToken(user) {
     const refreshToken = jwt.sign(
       {
         sub: user.id,
-        name: user.username,
-        email: user.email,
         iss: authConfig.JWT_ISS,
         jti: dbToken.jti,
       },
