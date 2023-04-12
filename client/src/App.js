@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import { Navbar } from "./components";
+import { Footer, Navbar } from "./components";
 import { About, HomePage, Login, Profile, Signup } from "./pages";
 
 function App() {
@@ -14,6 +14,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
