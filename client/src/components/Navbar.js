@@ -7,11 +7,12 @@ const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <nav className="bg-white border-b w-full md:static md:text-sm md:border-none">
+    <nav className="fixed top-0 bg-white border-b w-full md:text-sm md:border-none">
       <div className="items-center px-4 max-w-screen-xl mx-auto md:flex md:px-8">
         <div className="flex items-center justify-between py-3 md:py-5 md:block">
           <Link to="/">
             <img
+              className="rounded-lg"
               src="https://i.ibb.co/cbdv2Nz/react-express-jwt-auth.png"
               width={300}
               height={65}
