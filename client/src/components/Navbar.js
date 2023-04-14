@@ -65,7 +65,11 @@ const Navbar = () => {
             {navigation.map((item, idx) => {
               return (
                 <li key={idx} className="text-gray-700 hover:text-indigo-600">
-                  <Link to={item.path} className="block">
+                  <Link
+                    to={item.path}
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="block"
+                  >
                     {item.title}
                   </Link>
                 </li>
@@ -77,6 +81,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/login"
+                  onClick={() => setIsSidebarOpen(false)}
                   className="block py-3 text-center text-gray-700 hover:text-indigo-600 border rounded-lg md:border-none"
                 >
                   Log in
@@ -85,6 +90,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/signup"
+                  onClick={() => setIsSidebarOpen(false)}
                   className="block py-3 px-4 font-medium text-center text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 active:shadow-none rounded-lg shadow md:inline"
                 >
                   Sign up
