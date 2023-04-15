@@ -22,8 +22,16 @@ const emailValidate = body("email")
 const passwordValidate = body("password")
   .exists()
   .withMessage("Password is required")
+  .matches(/^[a-zA-Zа-яА-Я0-9~!?@#$%^&*_\-+()[\]{}><\/\\|"'.,:;]+$/)
+  .withMessage("Password contains invalid characters")
   .isLength({ min: 8, max: 64 })
-  .withMessage("Password must be between 8 and 64 characters");
+  .withMessage("Password must be between 8 and 64 characters")
+  .matches(/\d/)
+  .withMessage("Password must contain at least one digit")
+  .matches(/[a-zа-я]/)
+  .withMessage("Password must contain at least one lowercase letter")
+  .matches(/[A-ZА-Я]/)
+  .withMessage("Password must contain at least one uppercase letter")
 
 // An array of validators for user registration
 const signupValidation = [usernameValidate, emailValidate, passwordValidate];
