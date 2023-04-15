@@ -35,8 +35,6 @@ const checkDuplicateCredentials = async (req, res, next) => {
   }
 };
 
-const verifySignUp = {
+module.exports = {
   checkDuplicateCredentials,
 };
-
-module.exports = verifySignUp;
