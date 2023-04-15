@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(cookieParser());
 
@@ -24,6 +25,7 @@ sequelize
 
 app.use("/api/auth", require("./app/routes/auth.route"));
 app.use("/api/verify", require("./app/routes/access.route"));
+app.use("/api/check", require("./app/routes/check.route"));
 
 const PORT = process.env.PORT || 8000;
 
