@@ -21,11 +21,12 @@ const Login = () => {
           <Formik
             initialValues={{ email: "", password: "" }}
             validationSchema={LoginValidationSchema}
+            validateOnChange={false}
             onSubmit={handleSubmit}
           >
             {({ isSubmitting }) => (
               <Form className="space-y-5">
-                <div className="flex flex-col  gap-y-5">
+                <div className="flex flex-col w-96 gap-y-5">
                   <div>
                     <label className="font-medium" htmlFor="email">
                       Email

@@ -1,17 +1,46 @@
-import * as Yup from "yup";
+import { string, object } from "yup";
+import { checkUserExists } from "../api/api";
 
-const username = Yup.string()
+async function checkDuplicateCredential(value) {
+  try {
+    const credentialName = this.path;
+    const payload = { [credentialName]: value };
+    const userExists = await checkUserExists(payload);
+    // If user already exists (userExists = true)
+    // than credentials are not unique => return false
+    return !userExists;
+  } catch (err) {
+    this.createError({message: err.message})
+  }
+}
+
+const username = string()
   .trim()
   .min(3, "Username must be between 3 and 20 characters")
   .max(20, "Username must be between 3 and 20 characters")
-  .required("Username is required");
+  .required("Username is required")
+  .test(
+    "checkUsernameForDuplicates",
+    "This username is already registered",
+    checkDuplicateCredential
+  )
 
-const email = Yup.string()
+const emailSignup = string()
   .trim()
   .email("Invalid email adress")
   .required("Email is required")
+  .test(
+    "checkEmailForDuplicates",
+    "This email is already registered",
+    checkDuplicateCredential
+  );
 
-const password = Yup.string()
+const emailLogin = string()
+  .trim()
+  .email("Invalid email adress")
+  .required("Email is required");
+
+const password = string()
   .matches(
     /[a-zA-Zа-яА-Я0-9~!?@#$%^&*_\-+()[\]{}></\\|"'.,:;]+$/,
     "Password contains invalid characters"
@@ -23,13 +52,13 @@ const password = Yup.string()
   .matches(/[A-ZА-Я]/, "Password must contain at least one uppercase letter")
   .required("Password is required");
 
-export const LoginValidationSchema = Yup.object().shape({
-  email,
+export const LoginValidationSchema = object().shape({
+  email: emailLogin,
   password,
 });
 
-export const SignupValidationSchema = Yup.object().shape({
+export const SignupValidationSchema = object().shape({
   username,
-  email,
+  email: emailSignup,
   password,
 });
