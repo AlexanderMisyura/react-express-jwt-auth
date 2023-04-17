@@ -1,29 +1,20 @@
-const { User } = require("../models");
+const { getUserFromDB } = require("../services/dbCheck.service");
 
 const checkDuplicateCredentials = async (req, res, next) => {
   try {
-    const userByUsername = await User.findOne({
-      where: {
-        username: req.body.username,
-      },
-    });
+    const { username, email } = req.body;
+    const userByUsername = await getUserFromDB({ username });
     if (userByUsername) {
-      res.status(400).send({
+      return res.status(400).send({
         message: "Failed! Username is already in use!",
       });
-      return;
     }
 
-    const userByEmail = await User.findOne({
-      where: {
-        email: req.body.email,
-      },
-    });
+    const userByEmail = await getUserFromDB({ email });
     if (userByEmail) {
-      res.status(400).send({
+      return res.status(400).send({
         message: "Failed! Email is already in use!",
       });
-      return;
     }
 
     next();
