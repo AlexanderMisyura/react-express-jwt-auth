@@ -35,12 +35,12 @@ module.exports = (sequelize, Sequelize) => {
   );
 
   // method to compare passwords
-  User.prototype.comparePassword = async function (password, callback) {
+  User.prototype.comparePassword = async function (password) {
     try {
       const isMatch = await bcryptjs.compare(password, this.password);
-      callback(null, isMatch);
+      return isMatch;
     } catch (err) {
-      callback(err);
+      throw new Error(err);
     }
   };
 

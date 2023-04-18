@@ -66,17 +66,10 @@ exports.login = async (req, res) => {
     }
 
     // Compare the password from the request body with the user's password using a custom method
-    user.comparePassword(req.body.password, (err, isMatch) => {
-      // If there is an error, send an error response
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-
-      // If the passwords do not match, send an unauthorized response
-      if (!isMatch) {
-        return res.status(401).json({ error: "Invalid email or password" });
-      }
-    });
+    const isPasswordMatch = await user.comparePassword(req.body.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
 
     // Get an old refresh token if any
     const oldRefreshToken = req.cookies.refresh_token;
