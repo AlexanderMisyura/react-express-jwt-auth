@@ -1,5 +1,4 @@
-const { body, validationResult, s } = require("express-validator");
-const { isEmail, normalizeEmail } = require("validator");
+const { body, validationResult } = require("express-validator");
 
 const usernameValidate = body("username")
   .exists()
@@ -16,8 +15,8 @@ const emailValidate = body("email")
   .isString()
   .withMessage("Email must be a string")
   .trim()
-  .normalizeEmail({ gmail_remove_dots: false })
   .isEmail()
+  .normalizeEmail({ gmail_remove_dots: false })
   .withMessage("Email must be valid");
 
 const passwordValidate = body("password")
@@ -33,11 +32,6 @@ const passwordValidate = body("password")
   .withMessage("Password must contain at least one lowercase letter")
   .matches(/[A-ZА-Я]/)
   .withMessage("Password must contain at least one uppercase letter");
-
-const emailSanitize = body("email")
-  .isEmail()
-  .withMessage("Email must be valid")
-  .normalizeEmail({ gmail_remove_dots: false });
 
 // An array of validators for user registration
 const signupValidation = [usernameValidate, emailValidate, passwordValidate];
@@ -57,5 +51,4 @@ const validate = (req, res, next) => {
 module.exports = {
   validateSignup: [signupValidation, validate],
   validateLogin: [loginValidation, validate],
-  sanitizeEmail: [emailSanitize, validate],
 };
