@@ -1,16 +1,25 @@
 import { string, object } from "yup";
 import { checkUserExists } from "../api/api";
 
-async function checkDuplicateCredential(value) {
+async function checkDuplicateCredential(value, ctx) {
   try {
-    const credentialName = this.path;
+    const credentialName = ctx.path;
     const payload = { [credentialName]: value };
-    const userExists = await checkUserExists(payload);
-    // If user already exists (userExists = true)
-    // than credentials are not unique => return false
-    return !userExists;
+    const { isCredentialValid, userExists } = await checkUserExists(payload);
+    // The credential is available if it is valid and
+    // if the user with such credential doesn't exists
+    if (!isCredentialValid) {
+      return ctx.createError({
+        message: `This ${credentialName} is invalid`,
+      });
+    } else if (userExists) {
+      return ctx.createError({
+        message: `This ${credentialName} is already registered`,
+      });
+    }
+    return true;
   } catch (err) {
-    this.createError({message: err.message})
+    ctx.createError({ message: err.message });
   }
 }
 
@@ -19,21 +28,19 @@ const username = string()
   .min(3, "Username must be between 3 and 20 characters")
   .max(20, "Username must be between 3 and 20 characters")
   .required("Username is required")
-  .test(
-    "checkUsernameForDuplicates",
-    "This username is already registered",
-    checkDuplicateCredential
-  )
+  .test({
+    name: "checkDuplicates",
+    test: (value, ctx) => checkDuplicateCredential(value, ctx),
+  });
 
 const emailSignup = string()
   .trim()
   .email("Invalid email adress")
   .required("Email is required")
-  .test(
-    "checkEmailForDuplicates",
-    "This email is already registered",
-    checkDuplicateCredential
-  );
+  .test({
+    name: "checkDuplicates",
+    test: (value, ctx) => checkDuplicateCredential(value, ctx),
+  });
 
 const emailLogin = string()
   .trim()
