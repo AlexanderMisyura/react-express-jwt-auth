@@ -33,12 +33,16 @@ const verifyAccessToken = async (req, res, next) => {
 };
 
 const verifyRefreshToken = async (req, res, next) => {
-  const refreshToken = req.cookies.refresh_token;
+  const refreshToken = req.signedCookies.refresh_token_verify;
 
   if (!refreshToken) {
+    res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
+    res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
     return res
       .status(403)
-      .json({ message: "Forbidden: refresh token not provided" });
+      .json({
+        message: "Forbidden: refresh token not provided or compromised",
+      });
   }
 
   try {
@@ -54,7 +58,8 @@ const verifyRefreshToken = async (req, res, next) => {
     });
 
     if (!refreshTokenDB) {
-      res.clearCookie("refresh_token", { httpOnly: true });
+      res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
+      res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
       return res
         .status(403)
         .json({ message: "Forbidden: no match between user and token" });
@@ -65,7 +70,8 @@ const verifyRefreshToken = async (req, res, next) => {
 
     if (!user) {
       await refreshTokenDB.destroy();
-      res.clearCookie("refresh_token", { httpOnly: true });
+      res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
+      res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
       return res
         .status(403)
         .json({ message: "Forbidden: no match between user and token" });
@@ -76,13 +82,15 @@ const verifyRefreshToken = async (req, res, next) => {
     next();
   } catch (err) {
     console.log(err);
+    // error
     await RefreshToken.destroy({
       where: {
         user_id: decoded.sub,
         jti: decoded.jti,
       },
     });
-    res.clearCookie("refresh_token", { httpOnly: true });
+    res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
+    res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
     return res.status(401).json(err);
   }
 };

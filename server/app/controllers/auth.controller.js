@@ -32,9 +32,17 @@ exports.signup = async (req, res) => {
     );
 
     // Send a success response with the user and token data
-    res.cookie("refresh_token", refreshToken, {
+    res.cookie("refresh_token_auth", refreshToken, {
       httpOnly: true,
       expires: refreshExpiresAt,
+      path: "/api/auth/login",
+      signed: true,
+    });
+    res.cookie("refresh_token_verify", refreshToken, {
+      httpOnly: true,
+      expires: refreshExpiresAt,
+      path: "/api/verify/refresh",
+      signed: true,
     });
     res.status(200).json({
       access_token: accessToken,
@@ -72,7 +80,7 @@ exports.login = async (req, res) => {
     }
 
     // Get an old refresh token if any
-    const oldRefreshToken = req.cookies.refresh_token;
+    const oldRefreshToken = req.signedCookies.refresh_token_auth;
 
     // Generate tokens for the user using service functions
     const accessToken = generateAccessToken(user);
@@ -87,9 +95,17 @@ exports.login = async (req, res) => {
     );
 
     // Send a success response with the user and token data
-    res.cookie("refresh_token", refreshToken, {
+    res.cookie("refresh_token_auth", refreshToken, {
       httpOnly: true,
       expires: refreshExpiresAt,
+      path: "/api/auth/login",
+      signed: true,
+    });
+    res.cookie("refresh_token_verify", refreshToken, {
+      httpOnly: true,
+      expires: refreshExpiresAt,
+      path: "/api/verify/refresh",
+      signed: true,
     });
     res.status(200).json({
       access_token: accessToken,

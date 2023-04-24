@@ -6,5 +6,6 @@ module.exports = {
   JWT_ISSUER: process.env.JWT_ISSUER,
   jwtAccessExpiresIn: 900, // 15 min in seconds
   jwtRefreshExpiresIn: 86400, // 24 hours in seconds
-  userScope: "browse cart order profile review"
+  userScope: "browse cart order profile review",
+  COOKIE_SECRET: process.env.COOKIE_SECRET,
 };

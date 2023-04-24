@@ -1,6 +1,3 @@
-// Import the User model
-const { User } = require("../models");
-
 // Import access token generation function
 const {
   generateAccessToken,
@@ -18,7 +15,7 @@ exports.provideAccess = (req, res) => {
 
 exports.refreshAccess = async (req, res) => {
   try {
-    const oldRefreshToken = req.cookies.refresh_token;
+    const oldRefreshToken = req.signedCookies.refresh_token_verify;
 
     // Generate tokens for the user using service functions
     const accessToken = generateAccessToken(req.user);
@@ -32,9 +29,17 @@ exports.refreshAccess = async (req, res) => {
     );
 
     // Send a success response with the user and token data
-    res.cookie("refresh_token", refreshToken, {
+    res.cookie("refresh_token_auth", refreshToken, {
       httpOnly: true,
       expires: refreshExpiresAt,
+      path: "/api/auth/login",
+      signed: true,
+    });
+    res.cookie("refresh_token_verify", refreshToken, {
+      httpOnly: true,
+      expires: refreshExpiresAt,
+      path: "/api/verify/refresh",
+      signed: true,
     });
     res.status(200).json({
       access_token: accessToken,
