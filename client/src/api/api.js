@@ -16,13 +16,29 @@ export const checkUserExists = async (payload) => {
   }
 };
 
-// export const signup = async (userData) => {
-//   try {
-//     const
-//   } catch (err) {
+export const signup = async (userData) => {
+  try {
+    const resp = await api.post("auth/signup", userData, {
+      withCredentials: true,
+      credentials: "same-origin",
+    });
+    console.log("resp", resp);
+  } catch (err) {
+    throw err.response;
+  }
+};
 
-//   }
-// }
+export const login = async (userData) => {
+  try {
+    const resp = await api.post("auth/login", userData, {
+      withCredentials: true,
+      credentials: "same-origin",
+    });
+    console.log("resp", resp);
+  } catch (err) {
+    throw err.response;
+  }
+};
 
 // axios interceptor for adding access token to authorization header
 // api.interceptors.request.use(

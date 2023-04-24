@@ -5,7 +5,13 @@ require("dotenv").config({ path: "./app/config/.env" });
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
