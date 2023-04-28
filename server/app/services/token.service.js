@@ -68,7 +68,12 @@ async function generateRefreshToken(user, expiredRefreshToken) {
   }
 }
 
-module.exports = {
-  generateAccessToken,
-  generateRefreshToken,
+exports.generateTokens = async (user, expiredRefreshToken) => {
+  try {
+    const accessToken = generateAccessToken(user);
+    const refreshToken = await generateRefreshToken(user, expiredRefreshToken);
+    return { accessToken, refreshToken };
+  } catch (err) {
+    throw err;
+  }
 };

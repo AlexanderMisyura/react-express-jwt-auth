@@ -1,14 +1,45 @@
 // Import the User model
 const { User } = require("../models");
 
-// Import functions for token generation
-const {
-  generateAccessToken,
-  generateRefreshToken,
-} = require("../services/token.service");
+// Import function for tokens generation
+const { generateTokens } = require("../services/token.service");
 
 // Import the auth configuration file
 const authConfig = require("../config/auth.config");
+
+function getTokensExpirationDates() {
+  const accessExpiresAt = new Date(
+    Date.now() + authConfig.jwtAccessExpiresIn * 1000
+  );
+  const refreshExpiresAt = new Date(
+    Date.now() + authConfig.jwtRefreshExpiresIn * 1000
+  );
+  return { accessExpiresAt, refreshExpiresAt };
+}
+
+async function sendAuthResponse(req, res, user) {
+  // Get an old refresh token if any
+  const oldRefreshToken = req.signedCookies.refresh_token;
+  // Generate tokens for the user
+  const { accessToken, refreshToken } = await generateTokens(user, oldRefreshToken);
+  const { accessExpiresAt, refreshExpiresAt } = getTokensExpirationDates();
+
+  // Send a success response with the user and token data
+  res.cookie("refresh_token", refreshToken, {
+    httpOnly: true,
+    expires: refreshExpiresAt,
+    path: "/api/auth",
+    signed: true,
+  });
+  res.status(200).json({
+    access_token: accessToken,
+    token_type: "Bearer",
+    access_expires_in: authConfig.jwtAccessExpiresIn,
+    access_expires_at: accessExpiresAt,
+    refresh_expires_in: authConfig.jwtRefreshExpiresIn,
+    refresh_expires_at: refreshExpiresAt,
+  });
+}
 
 // Define a function to handle user signup requests
 exports.signup = async (req, res) => {
@@ -20,38 +51,7 @@ exports.signup = async (req, res) => {
       password: req.body.password,
     });
 
-    // Generate tokens for the user
-    const accessToken = generateAccessToken(user);
-    const refreshToken = await generateRefreshToken(user);
-
-    const accessExpiresAt = new Date(
-      Date.now() + authConfig.jwtAccessExpiresIn * 1000
-    );
-    const refreshExpiresAt = new Date(
-      Date.now() + authConfig.jwtRefreshExpiresIn * 1000
-    );
-
-    // Send a success response with the user and token data
-    res.cookie("refresh_token_auth", refreshToken, {
-      httpOnly: true,
-      expires: refreshExpiresAt,
-      path: "/api/auth/login",
-      signed: true,
-    });
-    res.cookie("refresh_token_verify", refreshToken, {
-      httpOnly: true,
-      expires: refreshExpiresAt,
-      path: "/api/verify/refresh",
-      signed: true,
-    });
-    res.status(200).json({
-      access_token: accessToken,
-      token_type: "Bearer",
-      access_expires_in: authConfig.jwtAccessExpiresIn,
-      access_expires_at: accessExpiresAt,
-      refresh_expires_in: authConfig.jwtRefreshExpiresIn,
-      refresh_expires_at: refreshExpiresAt,
-    });
+    sendAuthResponse(req, res, user);
   } catch (err) {
     // Send an error response with the error message
     res.status(500).json({ message: `registration error: ${err}` });
@@ -79,44 +79,18 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Get an old refresh token if any
-    const oldRefreshToken = req.signedCookies.refresh_token_auth;
-
-    // Generate tokens for the user using service functions
-    const accessToken = generateAccessToken(user);
-
-    const refreshToken = await generateRefreshToken(user, oldRefreshToken);
-
-    const accessExpiresAt = new Date(
-      Date.now() + authConfig.jwtAccessExpiresIn * 1000
-    );
-    const refreshExpiresAt = new Date(
-      Date.now() + authConfig.jwtRefreshExpiresIn * 1000
-    );
-
-    // Send a success response with the user and token data
-    res.cookie("refresh_token_auth", refreshToken, {
-      httpOnly: true,
-      expires: refreshExpiresAt,
-      path: "/api/auth/login",
-      signed: true,
-    });
-    res.cookie("refresh_token_verify", refreshToken, {
-      httpOnly: true,
-      expires: refreshExpiresAt,
-      path: "/api/verify/refresh",
-      signed: true,
-    });
-    res.status(200).json({
-      access_token: accessToken,
-      token_type: "Bearer",
-      access_expires_in: authConfig.jwtAccessExpiresIn,
-      access_expires_at: accessExpiresAt,
-      refresh_expires_in: authConfig.jwtRefreshExpiresIn,
-      refresh_expires_at: refreshExpiresAt,
-    });
+    sendAuthResponse(req, res, user);
   } catch (err) {
     // Send an error response with the error message
     res.status(500).json({ message: `login error: ${err}` });
+  }
+};
+
+exports.refresh = async (req, res) => {
+  try {
+    sendAuthResponse(req, res, req.user);
+  } catch (err) {
+    // Send an error response with the error message
+    res.status(500).json({ message: `token error: ${err}` });
   }
 };

@@ -1,6 +1,7 @@
 const { validateSignup, validateLogin } =
   require("../middleware").authValidation;
 const { checkDuplicateCredentials } = require("../middleware").verifySignUp;
+const { verifyRefreshToken } = require("../middleware").authJwt;
 
 const authController = require("../controllers/auth.controller");
 
@@ -12,6 +13,9 @@ router.post(
   checkDuplicateCredentials,
   authController.signup
 );
+
 router.post("/login", validateLogin, authController.login);
+
+router.get("/refresh", verifyRefreshToken, authController.refresh);
 
 module.exports = router;
