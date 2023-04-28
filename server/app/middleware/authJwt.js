@@ -18,9 +18,13 @@ const verifyAccessToken = async (req, res, next) => {
     const user = await User.findByPk(decoded.sub);
 
     if (!user) {
-      res.clearCookie("refresh_token", { httpOnly: true });
       return res
         .status(403)
+        .clearCookie("refresh_token", {
+          httpOnly: true,
+          path: "/api/auth",
+          signed: true,
+        })
         .json({ message: "Forbidden: no user matching the access token" });
     }
 
@@ -36,13 +40,14 @@ const verifyRefreshToken = async (req, res, next) => {
   const refreshToken = req.signedCookies.refresh_token_verify;
 
   if (!refreshToken) {
-    res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
-    res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
     return res
       .status(403)
-      .json({
-        message: "Forbidden: refresh token not provided or compromised",
-      });
+      .clearCookie("refresh_token", {
+        httpOnly: true,
+        path: "/api/auth",
+        signed: true,
+      })
+      .json({ message: "Forbidden: no user matching the access token" });
   }
 
   try {
@@ -58,11 +63,14 @@ const verifyRefreshToken = async (req, res, next) => {
     });
 
     if (!refreshTokenDB) {
-      res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
-      res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
       return res
         .status(403)
-        .json({ message: "Forbidden: no match between user and token" });
+        .clearCookie("refresh_token", {
+          httpOnly: true,
+          path: "/api/auth",
+          signed: true,
+        })
+        .json({ message: "Forbidden: no user matching the access token" });
     }
 
     // Find a user with the sub claim (user id) from the decoded refresh token payload
@@ -70,11 +78,14 @@ const verifyRefreshToken = async (req, res, next) => {
 
     if (!user) {
       await refreshTokenDB.destroy();
-      res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
-      res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
       return res
         .status(403)
-        .json({ message: "Forbidden: no match between user and token" });
+        .clearCookie("refresh_token", {
+          httpOnly: true,
+          path: "/api/auth",
+          signed: true,
+        })
+        .json({ message: "Forbidden: no user matching the access token" });
     }
 
     req.user = user;
@@ -89,8 +100,11 @@ const verifyRefreshToken = async (req, res, next) => {
         jti: decoded.jti,
       },
     });
-    res.clearCookie("refresh_token_auth", { path: "/api/auth/login" });
-    res.clearCookie("refresh_token_verify", { path: "/api/verify/refresh" });
+    res.clearCookie("refresh_token", {
+      httpOnly: true,
+      path: "/api/auth",
+      signed: true,
+    });
     return res.status(401).json(err);
   }
 };
