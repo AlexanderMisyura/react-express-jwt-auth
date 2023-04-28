@@ -11,7 +11,6 @@ const usernameValidate = body("username")
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
-  console.log("errors", errors);
   req.isCredentialValid = true;
   if (!errors.isEmpty()) {
     req.isCredentialValid = false;
