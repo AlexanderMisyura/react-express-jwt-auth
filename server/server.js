@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config({ path: "./app/config/.env" });
 const { COOKIE_SECRET } = require("./app/config/auth.config");
+const { errorHandler } = require("./app/middleware");
 
 const app = express();
 
@@ -33,6 +34,8 @@ sequelize
 app.use("/api/auth", require("./app/routes/auth.route"));
 app.use("/api/verify", require("./app/routes/access.route"));
 app.use("/api/check", require("./app/routes/check.route"));
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
 
