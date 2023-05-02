@@ -1,7 +1,7 @@
 module.exports = (sequelize, Sequelize) => {
   // Define the Token model
-  const RefreshToken = sequelize.define(
-    "RefreshToken",
+  const RevokedRefreshToken = sequelize.define(
+    "RevokedRefreshToken",
     {
       user_id: {
         type: Sequelize.INTEGER,
@@ -13,7 +13,6 @@ module.exports = (sequelize, Sequelize) => {
       },
       jti: {
         type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
         unique: true,
       },
       expires_at: {
@@ -22,13 +21,13 @@ module.exports = (sequelize, Sequelize) => {
       },
     },
     {
-      tableName: "refresh_tokens",
+      tableName: "revoked_refresh_tokens",
     }
   );
 
   // Define the association with the User model
-  RefreshToken.associate = (models) => {
-    RefreshToken.belongsTo(models.User, {
+  RevokedRefreshToken.associate = (models) => {
+    RevokedRefreshToken.belongsTo(models.User, {
       onDelete: "CASCADE", // delete the token when the user is deleted
       foreignKey: "user_id", // use user_id as the foreign key
       targetKey: "id", // match with the id field in the User table
@@ -36,5 +35,5 @@ module.exports = (sequelize, Sequelize) => {
   };
 
   // Return the Token model
-  return RefreshToken;
+  return RevokedRefreshToken;
 };

@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { UNAUTHORIZED, FORBIDDEN } = require("http-status-codes").StatusCodes;
-const { User, RefreshToken } = require("../models");
-const config = require("../config/auth.config");
+const { User, RevokedRefreshToken } = require("../models");
+const authConfig = require("../config/auth.config");
 const CustomError = require("../utils/CustomError");
 
 /**
@@ -27,7 +27,7 @@ const verifyAccessToken = async (req, res, next) => {
     // Extract the access token from the authorization header
     const accessToken = authHeader.split(" ")[1];
     // Verify and decode the access token using the secret key
-    const decoded = jwt.verify(accessToken, config.JWT_ACCESS_SECRET);
+    const decoded = jwt.verify(accessToken, authConfig.JWT_ACCESS_SECRET);
 
     // Find a user in the database with the sub claim (user id)
     // from the decoded access token payload
@@ -63,7 +63,7 @@ const verifyAccessToken = async (req, res, next) => {
 const verifyRefreshToken = async (req, res, next) => {
   try {
     // Get the refresh token from the signed cookie
-    const refreshToken = req.signedCookies.refresh_token_verify;
+    const refreshToken = req.signedCookies.refresh_token;
 
     if (!refreshToken) {
       const err = new CustomError(
@@ -76,21 +76,23 @@ const verifyRefreshToken = async (req, res, next) => {
     }
 
     // Verify and decode the refresh token using the secret key
-    const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET);
+    const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
 
     // Find a refresh token in the database with the sub claim (user id)
     // and jti claim (JWT identifier) from the decoded refresh token payload
-    const refreshTokenDB = await RefreshToken.findOne({
+
+    // Check if refresh token is already revoked
+    const revokedRefreshToken = await RevokedRefreshToken.findOne({
       where: {
         user_id: decoded.sub,
         jti: decoded.jti,
       },
     });
 
-    if (!refreshTokenDB) {
-      // Throw a custom forbidden error if the token doesn't exist
+    if (revokedRefreshToken) {
+      // Throw a custom forbidden error if the token is revoked
       const err = new CustomError(
-        "Forbidden: provided refresh token was not found",
+        "Forbidden: provided refresh token was revoked",
         FORBIDDEN
       );
       // Add a clearCookie property to indicate that the cookie should be cleared
@@ -102,18 +104,21 @@ const verifyRefreshToken = async (req, res, next) => {
     const user = await User.findByPk(decoded.sub);
 
     if (!user) {
-      // Delete the refresh token from the database if no user matches the token
-      await refreshTokenDB.destroy();
-
       // Throw a custom forbidden error if no user matches the token
       const err = new CustomError(
-        "Forbidden: no user matching the refresh token",
+        "Forbidden: no user matching the refresh token or the token was forged",
         FORBIDDEN
       );
       // Add a clearCookie property to indicate that the cookie should be cleared
       err.clearCookie = true;
       throw err;
     }
+
+    // Save the current refresh token in the DB to prevent further use
+    await RevokedRefreshToken.create({
+      user_id: user.id,
+      expires_at: new Date(decoded.exp * 1000),
+    });
 
     // Add the user object to the req object for further use
     req.user = user;
