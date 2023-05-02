@@ -35,7 +35,7 @@ const username = string()
 
 const emailSignup = string()
   .trim()
-  .email("Invalid email adress")
+  .email("Email must be valid")
   .required("Email is required")
   .test({
     name: "checkDuplicates",
@@ -44,7 +44,7 @@ const emailSignup = string()
 
 const emailLogin = string()
   .trim()
-  .email("Invalid email adress")
+  .email("Email must be valid")
   .required("Email is required");
 
 const password = string()

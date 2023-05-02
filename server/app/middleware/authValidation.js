@@ -1,4 +1,5 @@
 const { body, validationResult } = require("express-validator");
+const { getUserFromDB } = require("../services/dbCheck.service");
 
 const usernameValidate = body("username")
   .exists()
@@ -7,7 +8,13 @@ const usernameValidate = body("username")
   .withMessage("Username must be a string")
   .trim()
   .isLength({ min: 3, max: 20 })
-  .withMessage("Username must be between 3 and 20 characters");
+  .withMessage("Username must be between 3 and 20 characters")
+  .custom(async (value) => {
+    const user = await getUserFromDB({ username: value });
+    if (user) {
+      return Promise.reject("This username is already registered");
+    }
+  });
 
 const emailValidate = body("email")
   .exists()
@@ -18,6 +25,13 @@ const emailValidate = body("email")
   .isEmail()
   .normalizeEmail({ gmail_remove_dots: false })
   .withMessage("Email must be valid");
+
+const emailCheckForDuplicates = body("email").custom(async (value) => {
+  const user = await getUserFromDB({ email: value });
+  if (user) {
+    return Promise.reject("This email is already registered");
+  }
+});
 
 const passwordValidate = body("password")
   .exists()
@@ -34,7 +48,12 @@ const passwordValidate = body("password")
   .withMessage("Password must contain at least one uppercase letter");
 
 // An array of validators for user registration
-const signupValidation = [usernameValidate, emailValidate, passwordValidate];
+const signupValidation = [
+  usernameValidate,
+  emailValidate,
+  emailCheckForDuplicates,
+  passwordValidate,
+];
 
 // An array of validators for user login
 const loginValidation = [emailValidate, passwordValidate];
