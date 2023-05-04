@@ -1,11 +1,11 @@
-const authJwt = require("./authJwt");
 const authValidation = require("./authValidation");
 const checkValidation = require("./checkValidation");
 const errorHandler = require("./errorHandler");
+const tokenVerification = require("./tokenVerification");
 
 module.exports = {
-  authJwt,
   authValidation,
   checkValidation,
   errorHandler,
+  tokenVerification,
 };
