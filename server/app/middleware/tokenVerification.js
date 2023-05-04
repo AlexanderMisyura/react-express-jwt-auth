@@ -114,14 +114,9 @@ const verifyRefreshToken = async (req, res, next) => {
       throw err;
     }
 
-    // Save the current refresh token in the DB to prevent further use
-    await RevokedRefreshToken.create({
-      user_id: user.id,
-      expires_at: new Date(decoded.exp * 1000),
-    });
-
     // Add the user object to the req object for further use
     req.user = user;
+    req.user.tokenToRevoke = decoded;
 
     next();
   } catch (err) {

@@ -18,10 +18,8 @@ function getTokensExpirationDates() {
 }
 
 async function sendAuthResponse(req, res, user) {
-  // Get a used refresh token if any
-  const usedRefreshToken = req.signedCookies.refresh_token;
   // Generate tokens for the user
-  const { accessToken, refreshToken } = generateTokens(user, usedRefreshToken);
+  const { accessToken, refreshToken } = generateTokens(user);
   const { accessExpiresAt, refreshExpiresAt } = getTokensExpirationDates();
 
   // Send a success response with the user and token data
