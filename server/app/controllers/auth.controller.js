@@ -1,11 +1,13 @@
-// Import the User model
+const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, OK } =
+  require("http-status-codes").StatusCodes;
 const { User } = require("../models");
-
-// Import function for tokens generation
-const { generateTokens } = require("../services/token.service");
-
-// Import the auth configuration file
+const {
+  generateTokens,
+  revokeRefreshToken,
+} = require("../services/token.service");
 const authConfig = require("../config/auth.config");
+const CustomError = require("../utils/CustomError");
+const asyncWrapper = require("../utils/asyncWrapper");
 
 function getTokensExpirationDates() {
   const accessExpiresAt = new Date(
@@ -17,78 +19,83 @@ function getTokensExpirationDates() {
   return { accessExpiresAt, refreshExpiresAt };
 }
 
-async function sendAuthResponse(req, res, user) {
-  // Generate tokens for the user
-  const { accessToken, refreshToken } = generateTokens(user);
+// Send a successful response with user and token data
+async function sendAuthResponse(res, user) {
+  const { accessToken, refreshToken } = await generateTokens(user);
   const { accessExpiresAt, refreshExpiresAt } = getTokensExpirationDates();
 
-  // Send a success response with the user and token data
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
     expires: refreshExpiresAt,
     path: "/api/auth",
     signed: true,
   });
-  res.status(200).json({
+  res.status(OK).json({
     access_token: accessToken,
     token_type: "Bearer",
-    access_expires_in: authConfig.jwtAccessExpiresIn,
     access_expires_at: accessExpiresAt,
-    refresh_expires_in: authConfig.jwtRefreshExpiresIn,
     refresh_expires_at: refreshExpiresAt,
   });
 }
 
-// Define a function to handle user signup requests
-exports.signup = async (req, res) => {
-  try {
-    // Create a new user with the data from the request body
-    const user = await User.create({
-      username: req.body.username,
+const signup = async (req, res) => {
+  const user = await User.create({
+    username: req.body.username,
+    email: req.body.email,
+    password: req.body.password,
+  });
+  if (!user) {
+    throw new CustomError("Unable to create a new user", INTERNAL_SERVER_ERROR);
+  }
+
+  await sendAuthResponse(res, user);
+};
+
+const login = async (req, res) => {
+  const user = await User.findOne({
+    where: {
       email: req.body.email,
-      password: req.body.password,
-    });
+    },
+  });
 
-    sendAuthResponse(req, res, user);
-  } catch (err) {
-    // Send an error response with the error message
-    res.status(500).json({ message: `registration error: ${err}` });
+  if (!user) {
+    throw new CustomError("Login error: user not found", UNAUTHORIZED);
   }
+
+  const isPasswordMatch = await user.comparePassword(req.body.password);
+  if (!isPasswordMatch) {
+    throw new CustomError(
+      "Login error: invalid email or password",
+      UNAUTHORIZED
+    );
+  }
+
+  sendAuthResponse(res, user);
 };
 
-// Define a function to handle user login requests
-exports.login = async (req, res) => {
-  try {
-    // Find a user with the email from the request body
-    const user = await User.findOne({
-      where: {
-        email: req.body.email,
-      },
-    });
-
-    // If no user is found, send a not found response
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Compare the password from the request body with the user's password using a custom method
-    const isPasswordMatch = await user.comparePassword(req.body.password);
-    if (!isPasswordMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
-    }
-
-    sendAuthResponse(req, res, user);
-  } catch (err) {
-    // Send an error response with the error message
-    res.status(500).json({ message: `login error: ${err}` });
-  }
+const refresh = async (req, res) => {
+  sendAuthResponse(res, req.user);
 };
 
-exports.refresh = async (req, res) => {
-  try {
-    sendAuthResponse(req, res, req.user);
-  } catch (err) {
-    // Send an error response with the error message
-    res.status(500).json({ message: `token error: ${err}` });
-  }
+const logout = async (req, res) => {
+  const { jti, sub, exp } = req.user.tokenToRevoke;
+  await revokeRefreshToken({
+    user_id: sub,
+    expires_at: new Date(exp * 1000),
+    jti,
+  });
+  res
+    .clearCookie("refresh_token", {
+      httpOnly: true,
+      path: "/api/auth",
+      signed: true,
+    })
+    .status(OK);
+};
+
+module.exports = {
+  signup: asyncWrapper(signup),
+  login: asyncWrapper(login),
+  refresh: asyncWrapper(refresh),
+  logout: asyncWrapper(logout),
 };
