@@ -1,22 +1,28 @@
 const { INTERNAL_SERVER_ERROR } = require("http-status-codes").StatusCodes;
+const CustomError = require("../utils/CustomError");
 
-// Error handling middleware
 const errorHandler = (err, req, res, next) => {
   console.error(err);
-  // Check if the error has a clearCookie property
-  if (err.clearCookie) {
+  // Handle the custom error
+  if (err instanceof CustomError) {
+    const { status, message, clearCookie } = err;
     // Clear the refresh token cookie from the client's browser
-    res.clearCookie("refresh_token", {
-      httpOnly: true,
-      path: "/api/auth",
-      signed: true,
+    if (clearCookie) {
+      res.clearCookie("refresh_token", {
+        httpOnly: true,
+        path: "/api/auth",
+        signed: true,
+      });
+    }
+
+    res.status(status).json({
+      message,
+    });
+  } else {
+    res.status(INTERNAL_SERVER_ERROR).json({
+      message: "Something went wrong",
     });
   }
-
-  // Send the error message and status to the client
-  res.status(err.status || INTERNAL_SERVER_ERROR).json({
-    message: err.message || "Something went wrong",
-  });
 };
 
 module.exports = errorHandler;
