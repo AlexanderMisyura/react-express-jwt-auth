@@ -2,6 +2,20 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { RevokedRefreshToken } = require("../models");
 const authConfig = require("../config/auth.config");
+const CustomError = require("../utils/CustomError");
+const { INTERNAL_SERVER_ERROR } = require("http-status-codes").StatusCodes;
+
+async function revokeRefreshToken(token) {
+  try {
+    const { user_id, expires_at, jti } = token;
+    await RevokedRefreshToken.create({ user_id, expires_at, jti });
+  } catch (err) {
+    throw new CustomError(
+      `Unable to revoke a used token. ${err.message}`,
+      INTERNAL_SERVER_ERROR
+    );
+  }
+}
 
 // Generate access token
 function generateAccessToken(user) {
@@ -19,33 +33,37 @@ function generateAccessToken(user) {
   );
 }
 
-// Generate refresh token and save it to DB
+// Generate a new refresh token and revoke the used one if any
 async function generateRefreshToken(user) {
-  // Add used refresh token to revoked DB table
-  if (user.tokenToRevoke) {
-    const { jti, exp } = user.tokenToRevoke;
-    await RevokedRefreshToken.create({
-      user_id: user.id,
-      expires_at: new Date(exp * 1000),
-      jti,
-    });
-  }
-  const refreshToken = jwt.sign(
-    {
-      sub: user.id,
-      iss: authConfig.JWT_ISS,
-      jti: uuidv4(),
-    },
-    authConfig.JWT_REFRESH_SECRET,
-    {
-      expiresIn: authConfig.jwtRefreshExpiresIn,
+  try {
+    // Add used refresh token to revoked DB table
+    if (user.tokenToRevoke) {
+      const { jti, sub, exp } = user.tokenToRevoke;
+      await revokeRefreshToken({
+        user_id: sub,
+        expires_at: new Date(exp * 1000),
+        jti,
+      });
     }
-  );
+    const refreshToken = jwt.sign(
+      {
+        sub: user.id,
+        iss: authConfig.JWT_ISS,
+        jti: uuidv4(),
+      },
+      authConfig.JWT_REFRESH_SECRET,
+      {
+        expiresIn: authConfig.jwtRefreshExpiresIn,
+      }
+    );
 
-  return refreshToken;
+    return refreshToken;
+  } catch (err) {
+    throw err;
+  }
 }
 
-exports.generateTokens = async (user) => {
+const generateTokens = async (user) => {
   try {
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
@@ -53,4 +71,9 @@ exports.generateTokens = async (user) => {
   } catch (err) {
     throw err;
   }
+};
+
+module.exports = {
+  generateTokens,
+  revokeRefreshToken,
 };
