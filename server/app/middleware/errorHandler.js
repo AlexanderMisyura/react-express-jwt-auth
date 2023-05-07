@@ -1,11 +1,11 @@
 const { INTERNAL_SERVER_ERROR } = require("http-status-codes").StatusCodes;
-const CustomError = require("../utils/CustomError");
+const { AppError } = require("../utils/errorClasses");
 
 const errorHandler = (err, req, res, next) => {
   console.error(err);
   // Handle the custom error
-  if (err instanceof CustomError) {
-    const { status, message, clearCookie } = err;
+  if (err instanceof AppError) {
+    const { status, clearCookie } = err;
     // Clear the refresh token cookie from the client's browser
     if (clearCookie) {
       res.clearCookie("refresh_token", {
@@ -16,7 +16,7 @@ const errorHandler = (err, req, res, next) => {
     }
 
     res.status(status).json({
-      message,
+      err,
     });
   } else {
     res.status(INTERNAL_SERVER_ERROR).json({

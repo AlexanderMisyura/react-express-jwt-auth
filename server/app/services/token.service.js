@@ -2,17 +2,16 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const { RevokedRefreshToken } = require("../models");
 const authConfig = require("../config/auth.config");
-const CustomError = require("../utils/CustomError");
-const { INTERNAL_SERVER_ERROR } = require("http-status-codes").StatusCodes;
+const { DatabaseError } = require("../utils/errorClasses");
 
 async function revokeRefreshToken(token) {
   try {
     const { user_id, expires_at, jti } = token;
     await RevokedRefreshToken.create({ user_id, expires_at, jti });
   } catch (err) {
-    throw new CustomError(
-      `Unable to revoke a used token. ${err.message}`,
-      INTERNAL_SERVER_ERROR
+    throw new DatabaseError(
+      `Database error. Unable to revoke a used token. ${err.message}`,
+      err
     );
   }
 }

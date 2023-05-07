@@ -1,12 +1,15 @@
-const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, OK } =
-  require("http-status-codes").StatusCodes;
+const { BAD_REQUEST, OK } = require("http-status-codes").StatusCodes;
 const { User } = require("../models");
 const {
   generateTokens,
   revokeRefreshToken,
 } = require("../services/token.service");
 const authConfig = require("../config/auth.config");
-const CustomError = require("../utils/CustomError");
+const {
+  AppError,
+  AuthorizationError,
+  DatabaseError,
+} = require("../utils/errorClasses");
 const asyncWrapper = require("../utils/asyncWrapper");
 
 function getTokensExpirationDates() {
@@ -43,9 +46,15 @@ const signup = async (req, res) => {
     username: req.body.username,
     email: req.body.email,
     password: req.body.password,
+  }).catch((err) => {
+    throw new DatabaseError(err.message, err);
   });
+
   if (!user) {
-    throw new CustomError("Unable to create a new user", INTERNAL_SERVER_ERROR);
+    throw new AppError(
+      `Unable to create a new user. ${err.message}`,
+      BAD_REQUEST
+    );
   }
 
   await sendAuthResponse(res, user);
@@ -56,17 +65,18 @@ const login = async (req, res) => {
     where: {
       email: req.body.email,
     },
+  }).catch((err) => {
+    throw new DatabaseError(err.message, err);
   });
 
   if (!user) {
-    throw new CustomError("Login error: user not found", UNAUTHORIZED);
+    throw new AuthorizationError("Authorization error. User not found");
   }
 
   const isPasswordMatch = await user.comparePassword(req.body.password);
   if (!isPasswordMatch) {
-    throw new CustomError(
-      "Login error: invalid email or password",
-      UNAUTHORIZED
+    throw new AuthorizationError(
+      "Authorization error. Invalid email or password"
     );
   }
 

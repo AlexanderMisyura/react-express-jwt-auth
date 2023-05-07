@@ -1,4 +1,5 @@
 const { User } = require("../models");
+const { DatabaseError } = require("../utils/errorClasses");
 
 async function getUserFromDB(query) {
   try {
@@ -8,8 +9,7 @@ async function getUserFromDB(query) {
 
     return user;
   } catch (err) {
-    console.error(err);
-    throw new Error("Database error");
+    throw new DatabaseError(err.message, err);
   }
 }
 

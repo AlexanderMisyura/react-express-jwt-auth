@@ -1,5 +1,6 @@
 const { body, validationResult } = require("express-validator");
 const { getUserFromDB } = require("../services/dbCheck.service");
+const { ValidationError } = require("../utils/errorClasses");
 
 const usernameValidate = body("username")
   .exists()
@@ -62,7 +63,7 @@ const loginValidation = [emailValidate, passwordValidate];
 const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    throw new ValidationError(errors)
   }
   next();
 };
