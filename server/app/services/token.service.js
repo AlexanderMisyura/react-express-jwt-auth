@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const { RevokedRefreshToken } = require("../models");
+const { RevokedRefreshToken, Sequelize } = require("../models");
 const authConfig = require("../config/auth.config");
 const { DatabaseError } = require("../utils/errorClasses");
 
@@ -11,6 +11,24 @@ async function revokeRefreshToken(token) {
   } catch (err) {
     throw new DatabaseError(
       `Database error. Unable to revoke a used token. ${err.message}`,
+      err
+    );
+  }
+}
+
+// Delete expired revoked tokens from DB
+async function deleteExpiredTokens() {
+  try {
+    await RevokedRefreshToken.destroy({
+      where: {
+        expires_at: {
+          [Sequelize.Op.lt]: new Date(),
+        },
+      },
+    });
+  } catch (err) {
+    throw new DatabaseError(
+      `Expired revoked tokens deletion failed. ${err.message}`,
       err
     );
   }
@@ -73,6 +91,7 @@ const generateTokens = async (user) => {
 };
 
 module.exports = {
+  deleteExpiredTokens,
   generateTokens,
   revokeRefreshToken,
 };

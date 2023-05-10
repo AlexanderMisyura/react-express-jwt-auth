@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 require("dotenv").config({ path: "./app/config/.env" });
 const { COOKIE_SECRET } = require("./app/config/auth.config");
 const { errorHandler } = require("./app/middleware");
+const { deleteTokensTask } = require("./app/services/cron.service");
 
 const app = express();
 
@@ -31,6 +32,18 @@ sequelize
     console.error("Database models synchronization failed:", err);
   });
 
+deleteTokensTask.start();
+
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled rejection:", err);
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM signal received.");
+  deleteTokensTask.stop();
+  process.exit(0);
+});
+
 app.use("/api/auth", require("./app/routes/auth.route"));
 app.use("/api/verify", require("./app/routes/access.route"));
 app.use("/api/check", require("./app/routes/check.route"));
@@ -39,4 +52,6 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => console.log("api is running on localhost, port 8000"));
+app.listen(PORT, () =>
+  console.log(`api is running on localhost, port ${PORT}`)
+);
