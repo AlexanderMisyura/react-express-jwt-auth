@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import { useAuthContext } from "../contexts/AuthContext";
 import { navigation } from "../constants";
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { isAuthenticated, logoutUser } = useAuthContext();
+
+  async function logoutHandler() {
+    setIsSidebarOpen(!isSidebarOpen);
+    await logoutUser();
+  }
 
   return (
     <nav className="fixed top-0 bg-white border-b w-full md:text-sm md:border-none">
@@ -75,27 +82,51 @@ const Navbar = () => {
                 </li>
               );
             })}
+            {isAuthenticated && (
+              <li className="text-gray-700 hover:text-indigo-600">
+                <Link
+                  to={"/profile"}
+                  // need to send req to /verify/access and then redirect to /profile
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="block"
+                >
+                  Profile
+                </Link>
+              </li>
+            )}
             <span className="hidden w-px h-6 bg-gray-300 md:block"></span>
             <div className="space-y-3 items-center gap-x-6 md:flex md:space-y-0">
-              {}
-              <li>
-                <Link
-                  to="/login"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="block py-3 text-center text-gray-700 hover:text-indigo-600 border rounded-lg md:border-none"
-                >
-                  Log in
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/signup"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="block py-3 px-4 font-medium text-center text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 active:shadow-none rounded-lg shadow md:inline"
-                >
-                  Sign up
-                </Link>
-              </li>
+              {isAuthenticated ? (
+                <li>
+                  <Link
+                    onClick={logoutHandler}
+                    className="block py-3 text-center text-gray-700 hover:text-indigo-600 border rounded-lg md:border-none"
+                  >
+                    Log out
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block py-3 text-center text-gray-700 hover:text-indigo-600 border rounded-lg md:border-none"
+                    >
+                      Log in
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/signup"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="block py-3 px-4 font-medium text-center text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 active:shadow-none rounded-lg shadow md:inline"
+                    >
+                      Sign up
+                    </Link>
+                  </li>
+                </>
+              )}
             </div>
           </ul>
         </div>
