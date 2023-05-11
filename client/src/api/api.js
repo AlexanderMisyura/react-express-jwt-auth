@@ -3,6 +3,7 @@ import { baseURL } from "../constants";
 
 const api = axios.create({
   baseURL,
+  withCredentials: true,
 });
 
 export const checkUserExists = async (payload) => {
@@ -18,11 +19,7 @@ export const checkUserExists = async (payload) => {
 
 export const signup = async (userData) => {
   try {
-    const resp = await api.post("auth/signup", userData, {
-      withCredentials: true,
-      credentials: "same-origin",
-    });
-    console.log("resp", resp);
+    const resp = await api.post("auth/signup", userData);
   } catch (err) {
     throw err.response;
   }
@@ -30,31 +27,18 @@ export const signup = async (userData) => {
 
 export const login = async (userData) => {
   try {
-    const resp = await api.post("auth/login", userData, {
-      withCredentials: true,
-      credentials: "same-origin",
-    });
-    console.log("resp", resp);
+    const resp = await api.post("auth/login", userData);
+    return resp.data;
   } catch (err) {
-    throw err.response;
+    throw err.response.data.message;
   }
 };
 
-// axios interceptor for adding access token to authorization header
-// api.interceptors.request.use(
-//   (req) => {
-//     const accessToken = localStorage.getItem("access_token");
-//     if (!accessToken) {
-//       // make a request for getting new with refresh token
-//       // if (!refresh_token) {
-//       //   redirect to /login
-//       // }
-//     }
-
-//     req.headers.Authorization = `Bearer ${token}`;
-//     return req;
-//   },
-//   (err) => {
-//     return Promise.reject(err);
-//   }
-// );
+export const logout = async () => {
+  try {
+    const resp = await api.get("auth/logout");
+    return resp.data;
+  } catch (err) {
+    throw err.response.data.message;
+  }
+}
