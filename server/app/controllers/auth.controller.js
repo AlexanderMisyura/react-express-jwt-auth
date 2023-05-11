@@ -100,7 +100,8 @@ const logout = async (req, res) => {
       path: "/api/auth",
       signed: true,
     })
-    .status(OK);
+    .status(OK)
+    .json({ message: "Logged out" });
 };
 
 module.exports = {
