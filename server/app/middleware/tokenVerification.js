@@ -16,7 +16,7 @@ const verifyAccessToken = async (req, res, next) => {
     // Get the authorization header from the request,
     // check if the authorization header exists and starts with "Bearer"
     const authHeader = req.headers.authorization;
-    if (!accessToken || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw new TokenError("Access not provided. Please log in.", UNAUTHORIZED);
     }
 
