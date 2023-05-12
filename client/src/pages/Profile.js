@@ -1,4 +1,9 @@
+import { useAuthContext } from "../contexts/AuthContext";
+import { useOutletContext } from "react-router-dom";
 const Profile = () => {
+  const { user } = useAuthContext();
+  const [data] = useOutletContext();
+
   return (
     <main>
       <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-start h-screen md:px-8">
@@ -7,7 +12,12 @@ const Profile = () => {
             Profile
           </h3>
           <p className="text-gray-600">
-            You can see this page only if you are logged in.
+            Hi, <span className="font-semibold">{user.name}</span>! You can see
+            this page only if you are logged in.
+          </p>
+          <p className="text-gray-600">
+            Data from the server:{" "}
+            <span className="font-semibold">{data}</span>.
           </p>
         </div>
       </div>

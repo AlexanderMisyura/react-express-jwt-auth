@@ -41,4 +41,22 @@ export const logout = async () => {
   } catch (err) {
     throw err.response.data.message;
   }
-}
+};
+
+export const verify = async (options) => {
+  try {
+    const resp = await api.get("verify/access", options);
+    return resp;
+  } catch (err) {
+    throw err.response;
+  }
+};
+
+export const refreshAccess = async () => {
+  try {
+    const resp = await api.get("auth/refresh");
+    return resp.data;
+  } catch (err) {
+    throw err.response;
+  }
+};
