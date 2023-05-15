@@ -21,7 +21,7 @@ export const signup = async (userData) => {
   try {
     const resp = await api.post("auth/signup", userData);
   } catch (err) {
-    throw err.response;
+    throw err.response.data.err.message;
   }
 };
 
@@ -30,7 +30,7 @@ export const login = async (userData) => {
     const resp = await api.post("auth/login", userData);
     return resp.data;
   } catch (err) {
-    throw err.response.data.message;
+    throw err.response.data.err.message;
   }
 };
 
@@ -39,7 +39,7 @@ export const logout = async () => {
     const resp = await api.get("auth/logout");
     return resp.data;
   } catch (err) {
-    throw err.response.data.message;
+    throw err.response.data.err.message;
   }
 };
 
@@ -48,7 +48,7 @@ export const verify = async (options) => {
     const resp = await api.get("verify/access", options);
     return resp;
   } catch (err) {
-    throw err.response;
+    throw err.response.data.err.message;
   }
 };
 
@@ -57,6 +57,6 @@ export const refreshAccess = async () => {
     const resp = await api.get("auth/refresh");
     return resp.data;
   } catch (err) {
-    throw err.response;
+    throw err.response.data.err.message;
   }
 };

@@ -47,8 +47,8 @@ export const AuthProvider = ({ children }) => {
   const logoutUser = async () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
-    await logout();
     setIsAuthenticated(false);
+    await logout();
   };
 
   // Retrieve tokens from localStorage, check their expiration date, and refresh the access token if necessary.
@@ -67,9 +67,9 @@ export const AuthProvider = ({ children }) => {
 
     // The tokens are considered expired if there are less than 10 seconds left before their expiration date
     const accessExpired =
-      access_expires_at < new Date(Date.now() - 10000).toISOString();
+      Date.now() >= new Date(access_expires_at).getTime() - 10000;
     const refreshExpired =
-      refresh_expires_at < new Date(Date.now() - 10000).toISOString();
+      Date.now() >= new Date(refresh_expires_at).getTime() - 10000;
 
     if (refreshExpired) {
       await logoutUser();
