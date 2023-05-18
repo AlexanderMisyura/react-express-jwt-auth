@@ -88,12 +88,14 @@ const refresh = async (req, res) => {
 };
 
 const logout = async (req, res) => {
-  const { jti, sub, exp } = req.user.tokenToRevoke;
-  await revokeRefreshToken({
-    user_id: sub,
-    expires_at: new Date(exp * 1000),
-    jti,
-  });
+  if (req?.user?.tokenToRevoke) {
+    const { jti, sub, exp } = req.user.tokenToRevoke;
+    await revokeRefreshToken({
+      user_id: sub,
+      expires_at: new Date(exp * 1000),
+      jti,
+    });
+  }
   res
     .clearCookie("refresh_token", {
       httpOnly: true,

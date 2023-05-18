@@ -66,7 +66,7 @@ const verifyRefreshToken = async (req, res, next) => {
     // Get the refresh token from the signed cookie
     const refreshToken = req.signedCookies.refresh_token;
 
-    if (!refreshToken) {
+    if (!refreshToken && req.path !== "/logout") {
       const err = new TokenError(
         "Forbidden: refresh token is missing or invalid.",
         FORBIDDEN,
@@ -75,41 +75,45 @@ const verifyRefreshToken = async (req, res, next) => {
       throw err;
     }
 
-    // Verify and decode the refresh token using the secret key
-    const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
+    if (refreshToken) {
+      // Verify and decode the refresh token using the secret key
+      const decoded = jwt.verify(refreshToken, authConfig.JWT_REFRESH_SECRET);
 
-    // Check if refresh token is already revoked
-    const revokedRefreshToken = await RevokedRefreshToken.findOne({
-      where: {
-        user_id: decoded.sub,
-        jti: decoded.jti,
-      },
-    });
+      // Check if refresh token is already revoked
+      const revokedRefreshToken = await RevokedRefreshToken.findOne({
+        where: {
+          user_id: decoded.sub,
+          jti: decoded.jti,
+        },
+      });
 
-    if (revokedRefreshToken) {
-      const err = new TokenError(
-        "Forbidden: provided refresh token was revoked",
-        FORBIDDEN,
-        true
-      );
-      throw err;
+      if (revokedRefreshToken && req.path !== "/logout") {
+        const err = new TokenError(
+          "Forbidden: provided refresh token was revoked",
+          FORBIDDEN,
+          true
+        );
+        throw err;
+      }
+
+      // Find a user with the sub claim (user id) from the decoded refresh token payload
+      const user = await User.findByPk(decoded.sub);
+
+      if (!user && req.path !== "/logout") {
+        const err = new TokenError(
+          "Forbidden: no user matching the refresh token or the token was forged",
+          FORBIDDEN,
+          true
+        );
+        throw err;
+      }
+
+      // Add the user object to the req object for further use
+      if (user) {
+        req.user = user;
+        req.user.tokenToRevoke = decoded;
+      }
     }
-
-    // Find a user with the sub claim (user id) from the decoded refresh token payload
-    const user = await User.findByPk(decoded.sub);
-
-    if (!user) {
-      const err = new TokenError(
-        "Forbidden: no user matching the refresh token or the token was forged",
-        FORBIDDEN,
-        true
-      );
-      throw err;
-    }
-
-    // Add the user object to the req object for further use
-    req.user = user;
-    req.user.tokenToRevoke = decoded;
 
     next();
   } catch (err) {
