@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import jwt_decode from "jwt-decode";
 import { login, logout, refreshAccess, verify } from "../api/api";
 
@@ -44,25 +50,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logoutUser = async () => {
+  const logoutUser = useCallback(async () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     setIsAuthenticated(false);
     await logout();
-  };
+  }, []);
 
   // Retrieve tokens from localStorage, check their expiration date, and refresh the access token if necessary.
   const validatedToken = async () => {
     const access = JSON.parse(localStorage.getItem("access"));
     const refresh = JSON.parse(localStorage.getItem("refresh"));
     if (!access || !refresh) {
-      await logoutUser();
+      throw new Error("no access or refresh token");
     }
 
     const { access_expires_at, access_token } = access;
     const { refresh_expires_at } = refresh;
     if (!access_token || !access_expires_at || !refresh_expires_at) {
-      await logoutUser();
+      throw new Error("no access or refresh token");
     }
 
     // The tokens are considered expired if there are less than 10 seconds left before their expiration date
@@ -72,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       Date.now() >= new Date(refresh_expires_at).getTime() - 10000;
 
     if (refreshExpired) {
-      await logoutUser();
+      throw new Error("refresh token expired");
     }
 
     if (accessExpired) {
@@ -90,18 +96,18 @@ export const AuthProvider = ({ children }) => {
     return access_token;
   };
 
-  const verifyAccess = async () => {
+  const verifyAccess = useCallback(async (abortSignal) => {
     try {
       const access_token = await validatedToken();
       const res = await verify({
         headers: { Authorization: `Bearer ${access_token}` },
+        signal: abortSignal,
       });
       return res.data;
     } catch (err) {
-      console.error(err);
-      return false;
+      throw err;
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

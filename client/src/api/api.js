@@ -48,7 +48,7 @@ export const verify = async (options) => {
     const resp = await api.get("verify/access", options);
     return resp;
   } catch (err) {
-    throw err.response.data.err.message;
+    throw err;
   }
 };
 
@@ -57,6 +57,6 @@ export const refreshAccess = async () => {
     const resp = await api.get("auth/refresh");
     return resp.data;
   } catch (err) {
-    throw err.response.data.err.message;
+    throw err;
   }
 };

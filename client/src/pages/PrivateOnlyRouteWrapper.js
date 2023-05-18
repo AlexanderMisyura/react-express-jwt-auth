@@ -4,31 +4,44 @@ import { useAuthContext } from "../contexts/AuthContext";
 
 const PrivateOnlyRouteWrapper = () => {
   // isAuthenticated - the user is logged in
-  const { verifyAccess, isAuthenticated } = useAuthContext();
+  const { logoutUser, verifyAccess, isAuthenticated } = useAuthContext();
   // isAccesGranted - the access token is verified by the server
   const [isAccesGranted, setIsAccesGranted] = useState(false);
   const [data, setData] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
+    const controller = new AbortController();
     if (isAuthenticated) {
-      try {
-        const checkAccess = async () => {
-          const resp = await verifyAccess();
+      const checkAccess = async (abortSignal) => {
+        try {
+          const resp = await verifyAccess(abortSignal);
           setData(resp.data);
           setIsAccesGranted(true);
-          setIsLoading(false);
-        };
-        checkAccess();
-      } catch (err) {
-        console.log("err", err);
-        setIsLoading(false);
-      }
+        } catch (err) {
+          if (err.name === "CanceledError") {
+            console.log(
+              `Request to /${err.config.url} was ${err.message} : ${err.config.signal.reason}`
+            );
+          } else {
+            if (err?.response?.data?.err?.message) {
+              console.log(err?.response?.data?.err?.message);
+            } else {
+              console.log(err.message);
+            }
+            await logoutUser();
+          }
+        }
+      };
+      checkAccess(controller.signal);
     }
-  }, [isAuthenticated, verifyAccess]);
 
-  if (isAuthenticated && isLoading) {
+    return () => {
+      controller.abort("The component was unmounted");
+    };
+  }, [isAuthenticated, logoutUser, verifyAccess]);
+
+  if (isAuthenticated && !isAccesGranted) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-start h-screen md:px-8">
         <div className="max-w-lg mx-auto space-y-3 text-center">
@@ -40,8 +53,6 @@ const PrivateOnlyRouteWrapper = () => {
     );
   }
 
-  // isAuthenticated means the user is logged in
-  // isAccesGranted means the access token is verified by the server
   if (!isAccesGranted || !isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
