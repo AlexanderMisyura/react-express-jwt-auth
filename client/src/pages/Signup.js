@@ -1,12 +1,32 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { SignupValidationSchema } from "../helpers/validationSchemas";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const Signup = () => {
-  const handleSubmit = (values, { setSubmitting }) => {
-    setTimeout(() => {
-      alert(JSON.stringify(values, null, 2));
+  const { signupUser } = useAuthContext();
+  const location = useLocation();
+  const from = location.state?.from || -1;
+  const navigate = useNavigate();
+
+  const handleSubmit = async (
+    values,
+    { setSubmitting, setFieldError, resetForm }
+  ) => {
+    try {
+      await signupUser(values);
       setSubmitting(false);
-    }, 3000);
+      navigate(from);
+    } catch (err) {
+      if (err?.data?.errors) {
+        const errors = err.data.errors;
+        errors.forEach((err) => {
+          setFieldError([err.param], err.msg);
+        });
+      } else {
+        console.error(err);
+      }
+    }
   };
 
   return (
@@ -35,6 +55,7 @@ const Signup = () => {
                       name="username"
                       id="username"
                       type="text"
+                      autoComplete="username"
                       className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
                     />
                     <ErrorMessage
@@ -51,6 +72,7 @@ const Signup = () => {
                       name="email"
                       id="email"
                       type="email"
+                      autoComplete="email"
                       className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
                     />
                     <ErrorMessage
@@ -67,6 +89,7 @@ const Signup = () => {
                       name="password"
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
                     />
                     <ErrorMessage
@@ -79,7 +102,7 @@ const Signup = () => {
                 <button
                   className="disabled:opacity-75 w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150"
                   type="submit"
-                  disabled={isSubmitting || !isValid}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting && (
                     <svg

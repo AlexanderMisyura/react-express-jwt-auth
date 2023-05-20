@@ -20,6 +20,7 @@ export const checkUserExists = async (payload) => {
 export const signup = async (userData) => {
   try {
     const resp = await api.post("auth/signup", userData);
+    return resp.data;
   } catch (err) {
     throw err.response.data.err.message;
   }

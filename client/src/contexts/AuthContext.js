@@ -6,7 +6,7 @@ import {
   useCallback,
 } from "react";
 import jwt_decode from "jwt-decode";
-import { login, logout, refreshAccess, verify } from "../api/api";
+import { signup, login, logout, refreshAccess, verify } from "../api/api";
 
 export const AuthContext = createContext();
 
@@ -35,16 +35,35 @@ export const AuthProvider = ({ children }) => {
     setUser(user);
   }, [isAuthenticated]);
 
+  const signupUser = async (formData) => {
+    try {
+      const data = await signup(formData);
+      if (data?.token_type === "Bearer") {
+        const { access_expires_at, access_token, refresh_expires_at } = data;
+        localStorage.setItem(
+          "access",
+          JSON.stringify({ access_token, access_expires_at })
+        );
+        localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      console.log("error from AuthContext", err);
+    }
+  };
+
   const loginUser = async (formData) => {
     try {
-      const { access_expires_at, access_token, refresh_expires_at } =
-        await login(formData);
-      localStorage.setItem(
-        "access",
-        JSON.stringify({ access_token, access_expires_at })
-      );
-      localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
-      setIsAuthenticated(true);
+      const data = await login(formData);
+      if (data?.token_type === "Bearer") {
+        const { access_expires_at, access_token, refresh_expires_at } = data;
+        localStorage.setItem(
+          "access",
+          JSON.stringify({ access_token, access_expires_at })
+        );
+        localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
+        setIsAuthenticated(true);
+      }
     } catch (err) {
       console.log("error from AuthContext", err);
     }
@@ -111,7 +130,14 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, loginUser, logoutUser, verifyAccess }}
+      value={{
+        user,
+        isAuthenticated,
+        signupUser,
+        loginUser,
+        logoutUser,
+        verifyAccess,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,12 +1,22 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { LoginValidationSchema } from "../helpers/validationSchemas";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const Login = () => {
-  const handleSubmit = (values, { setSubmitting }) => {
-    setTimeout(() => {
-      alert(JSON.stringify(values, null, 2));
+  const { loginUser } = useAuthContext();
+  const location = useLocation();
+  const from = location.state?.from || -1;
+  const navigate = useNavigate();
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      await loginUser(values);
       setSubmitting(false);
-    }, 3000);
+      navigate(from);
+    } catch (err) {
+      console.error(err)
+    }
   };
 
   return (
@@ -35,6 +45,7 @@ const Login = () => {
                       name="email"
                       id="email"
                       type="email"
+                      autoComplete="email"
                       className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
                     />
                     <ErrorMessage
@@ -51,6 +62,7 @@ const Login = () => {
                       name="password"
                       id="password"
                       type="password"
+                      autoComplete="current-password"
                       className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
                     />
                     <ErrorMessage
@@ -63,7 +75,7 @@ const Login = () => {
                 <button
                   className="disabled:opacity-75 w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150"
                   type="submit"
-                  disabled={isSubmitting || !isValid}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting && (
                     <svg
