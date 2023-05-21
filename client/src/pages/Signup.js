@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 import { SignupValidationSchema } from "../helpers/validationSchemas";
 import { useAuthContext } from "../contexts/AuthContext";
 
@@ -8,6 +10,7 @@ const Signup = () => {
   const location = useLocation();
   const from = location.state?.from || -1;
   const navigate = useNavigate();
+  const [isPasswordRevealed, setIsPasswordRevealed] = useState(false);
 
   const handleSubmit = async (
     values,
@@ -29,6 +32,10 @@ const Signup = () => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setIsPasswordRevealed((prevState) => !prevState);
+  };
+
   return (
     <main>
       <div className="max-w-screen-xl mx-auto px-4 h-screen flex justify-center flex-col text-gray-600 md:px-8">
@@ -44,7 +51,7 @@ const Signup = () => {
             validateOnChange={false}
             onSubmit={handleSubmit}
           >
-            {({ isSubmitting, isValid }) => (
+            {({ isSubmitting, values }) => (
               <Form className="space-y-5">
                 <div className="flex flex-col w-96 gap-y-5">
                   <div>
@@ -85,13 +92,29 @@ const Signup = () => {
                     <label className="font-medium" htmlFor="password">
                       Password
                     </label>
-                    <Field
-                      name="password"
-                      id="password"
-                      type="password"
-                      autoComplete="new-password"
-                      className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
-                    />
+                    <div className="relative">
+                      <Field
+                        name="password"
+                        id="password"
+                        type={isPasswordRevealed ? "text" : "password"}
+                        autoComplete="new-password"
+                        className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg"
+                      />
+                      {values.password &&
+                        (isPasswordRevealed ? (
+                          <BsFillEyeSlashFill
+                            onClick={togglePasswordVisibility}
+                            title="hide password"
+                            className="absolute right-3 bottom-2 text-2xl text-gray-300 cursor-pointer"
+                          />
+                        ) : (
+                          <BsFillEyeFill
+                            onClick={togglePasswordVisibility}
+                            title="show password"
+                            className="absolute right-3 bottom-2 text-2xl text-gray-300 cursor-pointer"
+                          />
+                        ))}
+                    </div>
                     <ErrorMessage
                       className="text-red-400"
                       name="password"
