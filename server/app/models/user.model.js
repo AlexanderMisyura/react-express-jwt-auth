@@ -34,6 +34,15 @@ module.exports = (sequelize, Sequelize) => {
     }
   );
 
+  // Define the association with the Role model
+  User.associate = (models) => {
+    User.belongsToMany(models.Role, {
+      through: "user_roles",
+      foreignKey: "userId",
+      otherKey: "roleId",
+    });
+  };
+
   // method to compare passwords
   User.prototype.comparePassword = async function (password) {
     try {
