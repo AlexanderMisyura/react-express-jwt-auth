@@ -3,8 +3,7 @@ import { useLocation, Navigate, Outlet } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
 
 const PrivateOnlyRouteWrapper = () => {
-  // isAuthenticated - the user is logged in
-  const { logoutUser, verifyAccess, isAuthenticated } = useAuthContext();
+  const { logoutUser, verifyAccess, user } = useAuthContext();
   // isAccesGranted - the access token is verified by the server
   const [isAccesGranted, setIsAccesGranted] = useState(false);
   const [data, setData] = useState("");
@@ -12,7 +11,7 @@ const PrivateOnlyRouteWrapper = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (isAuthenticated) {
+    if (user) {
       const checkAccess = async (abortSignal) => {
         try {
           const resp = await verifyAccess(abortSignal);
@@ -39,9 +38,9 @@ const PrivateOnlyRouteWrapper = () => {
     return () => {
       controller.abort("The component was unmounted");
     };
-  }, [isAuthenticated, logoutUser, verifyAccess]);
+  }, [user, logoutUser, verifyAccess]);
 
-  if (isAuthenticated && !isAccesGranted) {
+  if (user && !isAccesGranted) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-start h-screen md:px-8">
         <div className="max-w-lg mx-auto space-y-3 text-center">
@@ -53,7 +52,7 @@ const PrivateOnlyRouteWrapper = () => {
     );
   }
 
-  if (!isAccesGranted || !isAuthenticated) {
+  if (!isAccesGranted || !user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   return <Outlet context={[data]} />;

@@ -6,7 +6,7 @@ import { navigation } from "../constants";
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { isAuthenticated, logoutUser } = useAuthContext();
+  const { user, logoutUser } = useAuthContext();
 
   async function logoutHandler() {
     setIsSidebarOpen(!isSidebarOpen);
@@ -82,11 +82,10 @@ const Navbar = () => {
                 </li>
               );
             })}
-            {isAuthenticated && (
+            {user?.roles?.includes("user") && (
               <li className="text-gray-700 hover:text-indigo-600">
                 <Link
                   to={"/profile"}
-                  // need to send req to /verify/access and then redirect to /profile
                   onClick={() => setIsSidebarOpen(false)}
                   className="block"
                 >
@@ -96,7 +95,7 @@ const Navbar = () => {
             )}
             <span className="hidden w-px h-6 bg-gray-300 md:block"></span>
             <div className="space-y-3 items-center gap-x-6 md:flex md:space-y-0">
-              {isAuthenticated ? (
+              {user ? (
                 <li>
                   <Link
                     onClick={logoutHandler}

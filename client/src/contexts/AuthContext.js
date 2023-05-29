@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useState,
   useCallback,
 } from "react";
@@ -16,8 +15,8 @@ function getUserFromStorage() {
     return null;
   }
   try {
-    const { name, email } = jwt_decode(token);
-    return { name, email };
+    const { name, email, roles } = jwt_decode(token);
+    return { name, email, roles };
   } catch (err) {
     localStorage.removeItem("access");
     return null;
@@ -25,15 +24,7 @@ function getUserFromStorage() {
 }
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("access")
-  );
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const user = getUserFromStorage();
-    setUser(user);
-  }, [isAuthenticated]);
+  const [user, setUser] = useState(() => getUserFromStorage());
 
   const signupUser = async (formData) => {
     try {
@@ -45,7 +36,7 @@ export const AuthProvider = ({ children }) => {
           JSON.stringify({ access_token, access_expires_at })
         );
         localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
-        setIsAuthenticated(true);
+        setUser(() => getUserFromStorage());
       }
     } catch (err) {
       console.log("error from AuthContext", err);
@@ -62,7 +53,7 @@ export const AuthProvider = ({ children }) => {
           JSON.stringify({ access_token, access_expires_at })
         );
         localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
-        setIsAuthenticated(true);
+        setUser(() => getUserFromStorage());
       }
     } catch (err) {
       console.log("error from AuthContext", err);
@@ -72,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   const logoutUser = useCallback(async () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
-    setIsAuthenticated(false);
+    setUser(null);
     await logout();
   }, []);
 
@@ -109,7 +100,7 @@ export const AuthProvider = ({ children }) => {
         JSON.stringify({ access_token, access_expires_at })
       );
       localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
-      setIsAuthenticated(true);
+      setUser(() => getUserFromStorage());
       return access_token;
     }
     return access_token;
@@ -132,7 +123,6 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated,
         signupUser,
         loginUser,
         logoutUser,

@@ -2,9 +2,9 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
 
 const PublicOnlyRouteWrapper = () => {
-  const { isAuthenticated } = useAuthContext();
+  const { user } = useAuthContext();
 
-  if (isAuthenticated) {
+  if (user) {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;
