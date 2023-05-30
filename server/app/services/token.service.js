@@ -41,7 +41,7 @@ function generateAccessToken(user) {
       sub: user.id,
       name: user.username,
       email: user.email,
-      scope: authConfig.userScope,
+      roles: authConfig.roles,
     },
     authConfig.JWT_ACCESS_SECRET,
     {

@@ -1,5 +1,5 @@
 const { BAD_REQUEST, OK } = require("http-status-codes").StatusCodes;
-const { User } = require("../models");
+const { User, Role } = require("../models");
 const {
   generateTokens,
   revokeRefreshToken,
@@ -42,6 +42,10 @@ async function sendAuthResponse(res, user) {
 }
 
 const signup = async (req, res) => {
+  const { roles } = authConfig;
+  if (req.body.isAdmin) {
+    roles.push("admin");
+  }
   const user = await User.create({
     username: req.body.username,
     email: req.body.email,
@@ -49,6 +53,14 @@ const signup = async (req, res) => {
   }).catch((err) => {
     throw new DatabaseError(err.message, err);
   });
+
+  user.addRoles(
+    await Promise.all(
+      roles.map(
+        async (role) => await Role.findOne({ where: { role_name: role } })
+      )
+    )
+  );
 
   if (!user) {
     throw new AppError(
