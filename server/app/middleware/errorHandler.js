@@ -15,12 +15,12 @@ const errorHandler = (err, req, res, next) => {
       });
     }
 
-    res.status(status).json({
-      err,
-    });
+    res.status(status).json({ error: err });
   } else {
     res.status(INTERNAL_SERVER_ERROR).json({
-      message: "Something went wrong",
+      error: {
+        message: "Something went wrong",
+      },
     });
   }
 };
