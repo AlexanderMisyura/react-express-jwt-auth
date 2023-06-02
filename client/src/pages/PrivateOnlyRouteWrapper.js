@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
-import { useLocation, Navigate, Outlet } from "react-router-dom";
+import { useLocation, Navigate, useNavigate, Outlet } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
 
-const PrivateOnlyRouteWrapper = () => {
+const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
   const { logoutUser, verifyAccess, user } = useAuthContext();
   // isAccesGranted - the access token is verified by the server
   const [isAccesGranted, setIsAccesGranted] = useState(false);
   const [data, setData] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
     if (user) {
       const checkAccess = async (abortSignal) => {
         try {
-          const resp = await verifyAccess(abortSignal);
+          const resp = await verifyAccess(requiredRole, abortSignal);
           setData(resp.data);
           setIsAccesGranted(true);
         } catch (err) {
@@ -23,10 +24,14 @@ const PrivateOnlyRouteWrapper = () => {
               `Request to /${err.config.url} was ${err.message} : ${err.config.signal.reason}`
             );
           } else {
-            if (err?.response?.data?.err?.message) {
-              console.log(err?.response?.data?.err?.message);
+            if (err?.response?.data?.error?.message) {
+              console.log(err.response.data.error.message);
+              if (err.response.data.error.name === "AccessError") {
+                navigate("/", { replace: true });
+                return;
+              }
             } else {
-              console.log(err.message);
+              console.log(err);
             }
             await logoutUser();
           }
@@ -38,7 +43,7 @@ const PrivateOnlyRouteWrapper = () => {
     return () => {
       controller.abort("The component was unmounted");
     };
-  }, [user, logoutUser, verifyAccess]);
+  }, [user, logoutUser, verifyAccess, navigate, requiredRole]);
 
   if (user && !isAccesGranted) {
     return (

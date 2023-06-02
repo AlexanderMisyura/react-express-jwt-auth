@@ -44,9 +44,9 @@ export const logout = async () => {
   }
 };
 
-export const verify = async (options) => {
+export const verify = async (role, options) => {
   try {
-    const resp = await api.get("verify/access", options);
+    const resp = await api.get(`verify/${role}-access`, options);
     return resp;
   } catch (err) {
     throw err;

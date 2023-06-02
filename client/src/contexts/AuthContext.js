@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         setUser(() => getUserFromStorage());
       }
     } catch (err) {
-      console.log("error from AuthContext", err);
+      console.log(err);
     }
   };
 
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
         setUser(() => getUserFromStorage());
       }
     } catch (err) {
-      console.log("error from AuthContext", err);
+      console.log(err);
     }
   };
 
@@ -106,10 +106,10 @@ export const AuthProvider = ({ children }) => {
     return access_token;
   };
 
-  const verifyAccess = useCallback(async (abortSignal) => {
+  const verifyAccess = useCallback(async (role, abortSignal) => {
     try {
       const access_token = await validatedToken();
-      const res = await verify({
+      const res = await verify(role, {
         headers: { Authorization: `Bearer ${access_token}` },
         signal: abortSignal,
       });
