@@ -35,13 +35,17 @@ async function deleteExpiredTokens() {
 }
 
 // Generate access token
-function generateAccessToken(user) {
+async function generateAccessToken(user) {
+  const roles = (await user.getRoles({ attributes: ["role_name"] })).map(
+    (role) => role.role_name
+  );
+  console.log('roles', roles)
   return jwt.sign(
     {
       sub: user.id,
       name: user.username,
       email: user.email,
-      roles: authConfig.roles,
+      roles,
     },
     authConfig.JWT_ACCESS_SECRET,
     {
@@ -82,7 +86,7 @@ async function generateRefreshToken(user) {
 
 const generateTokens = async (user) => {
   try {
-    const accessToken = generateAccessToken(user);
+    const accessToken = await generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
     return { accessToken, refreshToken };
   } catch (err) {
