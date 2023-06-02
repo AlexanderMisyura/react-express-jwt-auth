@@ -1,4 +1,4 @@
-const { BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED } =
+const { BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED, FORBIDDEN } =
   require("http-status-codes").StatusCodes;
 
 class AppError extends Error {
@@ -14,6 +14,12 @@ class AppError extends Error {
       message: this.message,
       status: this.status,
     };
+  }
+}
+
+class AccessError extends AppError {
+  constructor(message) {
+    super(message, FORBIDDEN)
   }
 }
 
@@ -55,6 +61,7 @@ class ValidationError extends AppError {
 
 module.exports = {
   AppError,
+  AccessError,
   AuthorizationError,
   DatabaseError,
   TokenError,
