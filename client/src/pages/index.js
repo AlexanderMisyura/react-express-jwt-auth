@@ -1,4 +1,5 @@
 import About from "./About";
+import AdminBoard from "./AdminBoard";
 import HomePage from "./HomePage";
 import Login from "./Login";
 import NotFound from "./NotFound";
@@ -9,6 +10,7 @@ import Signup from "./Signup";
 
 export {
   About,
+  AdminBoard,
   HomePage,
   Login,
   NotFound,

@@ -4,6 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { Footer, Navbar } from "./components";
 import {
   About,
+  AdminBoard,
   HomePage,
   Login,
   NotFound,
@@ -27,8 +28,17 @@ function App() {
           <Route path="/signup" element={<PublicOnlyRouteWrapper />}>
             <Route index element={<Signup />} />
           </Route>
-          <Route path="/profile" element={<PrivateOnlyRouteWrapper />}>
+          <Route
+            path="/profile"
+            element={<PrivateOnlyRouteWrapper requiredRole="user" />}
+          >
             <Route index element={<Profile />} />
+          </Route>
+          <Route
+            path="/admin-board"
+            element={<PrivateOnlyRouteWrapper requiredRole="admin" />}
+          >
+            <Route index element={<AdminBoard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
