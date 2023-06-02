@@ -1,5 +1,5 @@
 const { BAD_REQUEST, OK } = require("http-status-codes").StatusCodes;
-const { User, Role } = require("../models");
+const { Sequelize, User, Role } = require("../models");
 const {
   generateTokens,
   revokeRefreshToken,
@@ -54,20 +54,17 @@ const signup = async (req, res) => {
     throw new DatabaseError(err.message, err);
   });
 
-  user.addRoles(
-    await Promise.all(
-      roles.map(
-        async (role) => await Role.findOne({ where: { role_name: role } })
-      )
-    )
-  );
-
   if (!user) {
     throw new AppError(
       `Unable to create a new user. ${err.message}`,
       BAD_REQUEST
     );
   }
+
+  const userRoles = await Role.findAll({
+    where: { role_name: { [Sequelize.Op.or]: roles } },
+  });
+  await user.addRoles(userRoles);
 
   await sendAuthResponse(res, user);
 };
