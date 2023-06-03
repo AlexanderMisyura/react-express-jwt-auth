@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 import { SignupValidationSchema } from "../helpers/validationSchemas";
@@ -46,7 +46,12 @@ const Signup = () => {
         </div>
         <div className="mt-12 max-w-lg mx-auto">
           <Formik
-            initialValues={{ username: "", email: "", password: "" }}
+            initialValues={{
+              username: "",
+              email: "",
+              password: "",
+              isAdmin: false,
+            }}
             validationSchema={SignupValidationSchema}
             validateOnChange={false}
             onSubmit={handleSubmit}
@@ -121,6 +126,19 @@ const Signup = () => {
                       component="div"
                     />
                   </div>
+                  <div className="flex items-center gap-x-3">
+                    <Field
+                      type="checkbox"
+                      name="isAdmin"
+                      id="isAdmin"
+                      className="checkbox-item peer hidden"
+                    />
+                    <label
+                      htmlFor="isAdmin"
+                      className="relative flex w-5 h-5 bg-white peer-checked:bg-indigo-600 rounded-md border ring-offset-2 ring-indigo-600 duration-150 peer-active:ring cursor-pointer after:absolute after:inset-x-0 after:top-[3px] after:m-auto after:w-1.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-white after:rotate-45"
+                    ></label>
+                    <span>Want some superpowers?</span>
+                  </div>
                 </div>
                 <button
                   className="disabled:opacity-75 w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150"
@@ -151,6 +169,15 @@ const Signup = () => {
                   )}
                   Submit
                 </button>
+                <p className="text-center">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    Log in
+                  </Link>
+                </p>
               </Form>
             )}
           </Formik>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs";
 import { LoginValidationSchema } from "../helpers/validationSchemas";
@@ -125,6 +125,15 @@ const Login = () => {
                   )}
                   Submit
                 </button>
+                <p className="text-center">
+                  Don't have an account?{" "}
+                  <Link
+                    to="/signup"
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    Sign up
+                  </Link>
+                </p>
               </Form>
             )}
           </Formik>
