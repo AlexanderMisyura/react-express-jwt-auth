@@ -47,7 +47,7 @@ const verifyAccessToken = async (req, res, next) => {
     if (err instanceof jwt.JsonWebTokenError) {
       err = new TokenError(err.message, FORBIDDEN, true, err);
       if (err instanceof jwt.TokenExpiredError) {
-        err.clearCookie = true;
+        err.clearCookie = false;
       }
     }
     next(err);
