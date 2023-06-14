@@ -39,7 +39,7 @@ async function generateAccessToken(user) {
   const roles = (await user.getRoles({ attributes: ["role_name"] })).map(
     (role) => role.role_name
   );
-  console.log('roles', roles)
+
   return jwt.sign(
     {
       sub: user.id,

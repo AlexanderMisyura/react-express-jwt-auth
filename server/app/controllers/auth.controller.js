@@ -12,31 +12,20 @@ const {
 } = require("../utils/errorClasses");
 const asyncWrapper = require("../utils/asyncWrapper");
 
-function getTokensExpirationDates() {
-  const accessExpiresAt = new Date(
-    Date.now() + authConfig.jwtAccessExpiresIn * 1000
-  );
-  const refreshExpiresAt = new Date(
-    Date.now() + authConfig.jwtRefreshExpiresIn * 1000
-  );
-  return { accessExpiresAt, refreshExpiresAt };
-}
-
 // Send a successful response with user and token data
 async function sendAuthResponse(res, user) {
   const { accessToken, refreshToken } = await generateTokens(user);
-  const { accessExpiresAt, refreshExpiresAt } = getTokensExpirationDates();
+  const refreshExpiresAt = Date.now() + authConfig.jwtRefreshExpiresIn * 1000;
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    expires: refreshExpiresAt,
+    expires: new Date(refreshExpiresAt),
     path: "/api/auth",
     signed: true,
   });
   res.status(OK).json({
     access_token: accessToken,
     token_type: "Bearer",
-    access_expires_at: accessExpiresAt,
     refresh_expires_at: refreshExpiresAt,
   });
 }

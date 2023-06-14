@@ -10,7 +10,7 @@ import { signup, login, logout, refreshAccess, verify } from "../api/api";
 export const AuthContext = createContext();
 
 function getUserFromStorage() {
-  const token = localStorage.getItem("access");
+  const token = localStorage.getItem("access_token");
   if (!token) {
     return null;
   }
@@ -18,9 +18,16 @@ function getUserFromStorage() {
     const { name, email, roles } = jwt_decode(token);
     return { name, email, roles };
   } catch (err) {
-    localStorage.removeItem("access");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_expires_at");
     return null;
   }
+}
+
+function storeTokenData(data) {
+  const { access_token, refresh_expires_at } = data;
+  localStorage.setItem("access_token", access_token);
+  localStorage.setItem("refresh_expires_at", refresh_expires_at);
 }
 
 export const AuthProvider = ({ children }) => {
@@ -30,12 +37,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await signup(formData);
       if (data?.token_type === "Bearer") {
-        const { access_expires_at, access_token, refresh_expires_at } = data;
-        localStorage.setItem(
-          "access",
-          JSON.stringify({ access_token, access_expires_at })
-        );
-        localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
+        storeTokenData(data);
         setUser(() => getUserFromStorage());
       }
     } catch (err) {
@@ -47,12 +49,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await login(formData);
       if (data?.token_type === "Bearer") {
-        const { access_expires_at, access_token, refresh_expires_at } = data;
-        localStorage.setItem(
-          "access",
-          JSON.stringify({ access_token, access_expires_at })
-        );
-        localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
+        storeTokenData(data);
         setUser(() => getUserFromStorage());
       }
     } catch (err) {
@@ -61,59 +58,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logoutUser = useCallback(async () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_expires_at");
     setUser(null);
     await logout();
   }, []);
 
-  // Retrieve tokens from localStorage, check their expiration date, and refresh the access token if necessary.
-  const validatedToken = async () => {
-    const access = JSON.parse(localStorage.getItem("access"));
-    const refresh = JSON.parse(localStorage.getItem("refresh"));
-    if (!access || !refresh) {
-      throw new Error("no access or refresh token");
-    }
-
-    const { access_expires_at, access_token } = access;
-    const { refresh_expires_at } = refresh;
-    if (!access_token || !access_expires_at || !refresh_expires_at) {
-      throw new Error("no access or refresh token");
-    }
-
-    // The tokens are considered expired if there are less than 10 seconds left before their expiration date
-    const accessExpired =
-      Date.now() >= new Date(access_expires_at).getTime() - 10000;
-    const refreshExpired =
-      Date.now() >= new Date(refresh_expires_at).getTime() - 10000;
-
-    if (refreshExpired) {
-      throw new Error("refresh token expired");
-    }
-
-    if (accessExpired) {
-      // Refresh the access token
-      const { access_expires_at, access_token, refresh_expires_at } =
-        await refreshAccess();
-      localStorage.setItem(
-        "access",
-        JSON.stringify({ access_token, access_expires_at })
-      );
-      localStorage.setItem("refresh", JSON.stringify({ refresh_expires_at }));
-      setUser(() => getUserFromStorage());
-      return access_token;
-    }
-    return access_token;
-  };
+  const refreshUserTokens = useCallback(async () => {
+    const newTokenData = await refreshAccess();
+    storeTokenData(newTokenData);
+  }, []);
 
   const verifyAccess = useCallback(async (role, abortSignal) => {
     try {
-      const access_token = await validatedToken();
-      const res = await verify(role, {
-        headers: { Authorization: `Bearer ${access_token}` },
+      const data = await verify(role, {
         signal: abortSignal,
       });
-      return res.data;
+      return data;
     } catch (err) {
       throw err;
     }
@@ -126,6 +87,7 @@ export const AuthProvider = ({ children }) => {
         signupUser,
         loginUser,
         logoutUser,
+        refreshUserTokens,
         verifyAccess,
       }}
     >
