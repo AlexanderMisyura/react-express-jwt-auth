@@ -6,6 +6,11 @@ const api = axios.create({
   withCredentials: true,
 });
 
+export const secureApi = axios.create({
+  baseURL,
+  withCredentials: true,
+});
+
 export const checkUserExists = async (payload) => {
   try {
     const resp = await api.post("/check/user", payload);
@@ -46,8 +51,8 @@ export const logout = async () => {
 
 export const verify = async (role, options) => {
   try {
-    const resp = await api.get(`verify/${role}-access`, options);
-    return resp;
+    const resp = await secureApi.get(`verify/${role}-access`, options);
+    return resp.data;
   } catch (err) {
     throw err;
   }

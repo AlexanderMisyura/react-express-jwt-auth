@@ -15,8 +15,8 @@ const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
     if (user) {
       const checkAccess = async (abortSignal) => {
         try {
-          const resp = await verifyAccess(requiredRole, abortSignal);
-          setData(resp.data);
+          const data = await verifyAccess(requiredRole, abortSignal);
+          setData(data.securedData);
           setIsAccesGranted(true);
         } catch (err) {
           if (err.name === "CanceledError") {
