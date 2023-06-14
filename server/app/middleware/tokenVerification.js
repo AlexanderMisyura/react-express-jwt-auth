@@ -44,13 +44,19 @@ const verifyAccessToken = async (req, res, next) => {
     next();
   } catch (err) {
     // Check if the error is a JWT error
+    let tokenError = err;
+
     if (err instanceof jwt.JsonWebTokenError) {
-      err = new TokenError(err.message, FORBIDDEN, true, err);
       if (err instanceof jwt.TokenExpiredError) {
-        err.clearCookie = false;
+        tokenError = new TokenError(err.message, UNAUTHORIZED, err, {
+          clearCookie: false,
+          isRefetchNeeded: true,
+        });
+      } else {
+        tokenError = new TokenError(err.message, FORBIDDEN, err);
       }
     }
-    next(err);
+    next(tokenError);
   }
 };
 

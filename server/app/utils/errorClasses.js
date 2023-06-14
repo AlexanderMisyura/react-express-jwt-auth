@@ -19,7 +19,7 @@ class AppError extends Error {
 
 class AccessError extends AppError {
   constructor(message) {
-    super(message, FORBIDDEN)
+    super(message, FORBIDDEN);
   }
 }
 
@@ -37,12 +37,24 @@ class DatabaseError extends AppError {
 }
 
 class TokenError extends AppError {
-  constructor(message, status, clearCookie, error = null) {
+  constructor(
+    message,
+    status,
+    error = null,
+    options = { clearCookie: true, isRefetchNeeded: false }
+  ) {
     super(message, status);
-    this.clearCookie = clearCookie;
+    this.clearCookie = options.clearCookie;
+    this.isRefetchNeeded = options.isRefetchNeeded;
     if (error) {
       this.error = error;
     }
+  }
+
+  toJSON() {
+    const json = super.toJSON();
+    json.isRefetchNeeded = this.isRefetchNeeded;
+    return json;
   }
 }
 
