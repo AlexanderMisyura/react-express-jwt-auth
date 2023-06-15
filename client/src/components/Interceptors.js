@@ -55,7 +55,10 @@ const Interceptors = ({ children }) => {
     }
     async function responseErrorCb(err) {
       const originalRequest = err.config;
-      if (err.response.data.error.isRefetchNeeded && !originalRequest._retry) {
+      if (
+        err.response?.data?.error?.isRefetchNeeded &&
+        !originalRequest._retry
+      ) {
         originalRequest._retry = true;
         await refreshUserTokens();
         setAuthHeader(originalRequest);

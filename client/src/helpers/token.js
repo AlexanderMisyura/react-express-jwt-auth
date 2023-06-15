@@ -18,8 +18,8 @@ export function getAccessToken() {
   } catch (err) {
     throw new Error("access token invalid");
   }
+
   if (accessExpirationTime * 1000 - 10000 < Date.now()) {
-    console.log("access expired");
     throw new Error("access token expired");
   }
 

@@ -27,8 +27,7 @@ const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
             if (err?.response?.data?.error?.message) {
               console.log(err.response.data.error.message);
               if (err.response.data.error.name === "AccessError") {
-                navigate("/", { replace: true });
-                return;
+                return navigate("/", { replace: true });
               }
             } else {
               console.log(err);

@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-} from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import jwt_decode from "jwt-decode";
 import { signup, login, logout, refreshAccess, verify } from "../api/api";
 
