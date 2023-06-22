@@ -14,15 +14,8 @@ function getUserFromStorage() {
     return { name, email, roles };
   } catch (err) {
     localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_expires_at");
     return null;
   }
-}
-
-function storeTokenData(data) {
-  const { access_token, refresh_expires_at } = data;
-  localStorage.setItem("access_token", access_token);
-  localStorage.setItem("refresh_expires_at", refresh_expires_at);
 }
 
 export const AuthProvider = ({ children }) => {
@@ -32,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await signup(formData);
       if (data?.token_type === "Bearer") {
-        storeTokenData(data);
+        localStorage.setItem("access_token", data.access_token);
         setUser(() => getUserFromStorage());
       }
     } catch (err) {
@@ -44,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await login(formData);
       if (data?.token_type === "Bearer") {
-        storeTokenData(data);
+        localStorage.setItem("access_token", data.access_token);
         setUser(() => getUserFromStorage());
       }
     } catch (err) {
@@ -54,14 +47,13 @@ export const AuthProvider = ({ children }) => {
 
   const logoutUser = useCallback(async () => {
     localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_expires_at");
     setUser(null);
     await logout();
   }, []);
 
   const refreshUserTokens = useCallback(async () => {
     const newTokenData = await refreshAccess();
-    storeTokenData(newTokenData);
+    localStorage.setItem("access_token", newTokenData.access_token);
   }, []);
 
   const verifyAccess = useCallback(async (role, abortSignal) => {

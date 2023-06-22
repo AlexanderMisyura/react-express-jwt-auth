@@ -15,18 +15,19 @@ const asyncWrapper = require("../utils/asyncWrapper");
 // Send a successful response with user and token data
 async function sendAuthResponse(res, user) {
   const { accessToken, refreshToken } = await generateTokens(user);
-  const refreshExpiresAt = Date.now() + authConfig.jwtRefreshExpiresIn * 1000;
+  const refreshExpiresAt = new Date(
+    Date.now() + authConfig.jwtRefreshExpiresIn * 1000
+  );
 
   res.cookie("refresh_token", refreshToken, {
     httpOnly: true,
-    expires: new Date(refreshExpiresAt),
+    expires: refreshExpiresAt,
     path: "/api/auth",
     signed: true,
   });
   res.status(OK).json({
     access_token: accessToken,
     token_type: "Bearer",
-    refresh_expires_at: refreshExpiresAt,
   });
 }
 
