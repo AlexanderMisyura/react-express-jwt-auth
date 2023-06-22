@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { secureApi } from "../api/api";
 import { useAuthContext } from "../contexts/AuthContext";
-import { getAccessToken } from "../helpers/token";
 
 const Interceptors = ({ children }) => {
   const [areInterseptorsSet, setAreInterseptorsSet] = useState(false);
@@ -10,7 +9,7 @@ const Interceptors = ({ children }) => {
 
   useEffect(() => {
     function setAuthHeader(config) {
-      const access_token = getAccessToken();
+      const access_token = localStorage.getItem("access_token");
       config.headers["Authorization"] = `Bearer ${access_token}`;
     }
 
@@ -21,22 +20,7 @@ const Interceptors = ({ children }) => {
     );
 
     async function requestCb(config) {
-      try {
-        setAuthHeader(config);
-      } catch (err) {
-        if (err.message === "access token expired") {
-          // refresh token
-          try {
-            await refreshUserTokens();
-            setAuthHeader(config);
-          } catch (err) {
-            return await logoutUser();
-          }
-        } else {
-          return await logoutUser();
-        }
-      }
-
+      setAuthHeader(config);
       return config;
     }
 
