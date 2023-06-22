@@ -16,9 +16,9 @@ import {
 
 function App() {
   return (
-    <AuthProvider>
-      <Interceptors>
-        <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <Interceptors>
           <Navbar />
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -44,9 +44,9 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
-        </BrowserRouter>
-      </Interceptors>
-    </AuthProvider>
+        </Interceptors>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

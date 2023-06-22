@@ -1,39 +1,22 @@
 import { useState, useEffect } from "react";
-import { useLocation, Navigate, useNavigate, Outlet } from "react-router-dom";
+import { useLocation, Navigate, Outlet } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
 
 const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
-  const { logoutUser, verifyAccess, user } = useAuthContext();
+  const { verifyAccess, user } = useAuthContext();
   // isAccesGranted - the access token is verified by the server
   const [isAccesGranted, setIsAccesGranted] = useState(false);
   const [data, setData] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
     if (user) {
       const checkAccess = async (abortSignal) => {
-        try {
-          const data = await verifyAccess(requiredRole, abortSignal);
+        const data = await verifyAccess(requiredRole, abortSignal);
+        if (data) {
           setData(data.securedData);
           setIsAccesGranted(true);
-        } catch (err) {
-          if (err.name === "CanceledError") {
-            console.log(
-              `Request to /${err.config.url} was ${err.message} : ${err.config.signal.reason}`
-            );
-          } else {
-            if (err?.response?.data?.error?.message) {
-              console.log(err.response.data.error.message);
-              if (err.response.data.error.name === "AccessError") {
-                return navigate("/", { replace: true });
-              }
-            } else {
-              console.log(err);
-            }
-            await logoutUser();
-          }
         }
       };
       checkAccess(controller.signal);
@@ -42,7 +25,7 @@ const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
     return () => {
       controller.abort("The component was unmounted");
     };
-  }, [user, logoutUser, verifyAccess, navigate, requiredRole]);
+  }, [user, verifyAccess, requiredRole]);
 
   if (user && !isAccesGranted) {
     return (

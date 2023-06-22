@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { signup, login, logout, refreshAccess, verify } from "../api/api";
 
@@ -20,6 +21,7 @@ function getUserFromStorage() {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => getUserFromStorage());
+  const navigate = useNavigate();
 
   const signupUser = async (formData) => {
     try {
@@ -56,16 +58,27 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("access_token", newTokenData.access_token);
   }, []);
 
-  const verifyAccess = useCallback(async (role, abortSignal) => {
-    try {
-      const data = await verify(role, {
-        signal: abortSignal,
-      });
-      return data;
-    } catch (err) {
-      throw err;
-    }
-  }, []);
+  const verifyAccess = useCallback(
+    async (role, abortSignal) => {
+      try {
+        const data = await verify(role, {
+          signal: abortSignal,
+        });
+        return data;
+      } catch (err) {
+        if (err.name === "CanceledError") {
+          console.log(
+            `Request to /${err.config.url} was ${err.message} : ${err.config.signal.reason}`
+          );
+        } else if (err?.response?.data?.error?.name === "AccessError") {
+          navigate("/", { replace: true });
+        } else {
+          await logoutUser();
+        }
+      }
+    },
+    [logoutUser, navigate]
+  );
 
   return (
     <AuthContext.Provider
