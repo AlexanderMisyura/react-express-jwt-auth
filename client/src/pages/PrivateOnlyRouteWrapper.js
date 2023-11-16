@@ -4,8 +4,8 @@ import { useAuthContext } from "../contexts/AuthContext";
 
 const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
   const { verifyAccess, user } = useAuthContext();
-  // isAccesGranted - the access token is verified by the server
-  const [isAccesGranted, setIsAccesGranted] = useState(false);
+  // isAccessGranted - the access token is verified by the server
+  const [isAccessGranted, setIsAccessGranted] = useState(false);
   const [data, setData] = useState("");
   const location = useLocation();
 
@@ -16,7 +16,7 @@ const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
         const data = await verifyAccess(requiredRole, abortSignal);
         if (data) {
           setData(data.securedData);
-          setIsAccesGranted(true);
+          setIsAccessGranted(true);
         }
       };
       checkAccess(controller.signal);
@@ -27,7 +27,7 @@ const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
     };
   }, [user, verifyAccess, requiredRole]);
 
-  if (user && !isAccesGranted) {
+  if (user && !isAccessGranted) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-start h-screen md:px-8">
         <div className="max-w-lg mx-auto space-y-3 text-center">
@@ -39,7 +39,7 @@ const PrivateOnlyRouteWrapper = ({ requiredRole }) => {
     );
   }
 
-  if (!isAccesGranted || !user) {
+  if (!isAccessGranted || !user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   return <Outlet context={[data]} />;
